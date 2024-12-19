@@ -1,0 +1,34 @@
+/* Order Dialog Container */
+.order-dialog {
+  background-color: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  padding: 20px;
+  width: 70%;
+  margin: 10px auto;
+  font-family: Arial, sans-serif;
+}
+
+.order-details p {
+  font-size: 14px;
+  color: #555;
+  margin: 8px 0;
+  line-height: 1.5;
+}
+
+.order-details p strong {
+  color: #4caf50;
+}
+
+.order-details span,
+.order-details ng-template {
+  color: #777;
+  font-style: italic;
+}
+
+.order-dialog:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  transform: scale(1.02);
+  transition: all 0.3s ease;
+}

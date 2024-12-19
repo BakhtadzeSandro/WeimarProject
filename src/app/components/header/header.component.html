@@ -1,0 +1,20 @@
+<div class="container">
+  <div class="left">
+    @if (currentUser$ | async; as currentUser) {
+    <div class="user">
+      <div class="photo">
+        <img [src]="currentUser.photoURL" />
+      </div>
+      <div class="name">{{ currentUser.displayName }}</div>
+    </div>
+    }
+  </div>
+
+  <div class="header">Weimar Omedia</div>
+
+  <div class="right">
+    @if (currentUser$ | async) {
+    <div class="logout" (click)="logout()">Log Out</div>
+    }
+  </div>
+</div>

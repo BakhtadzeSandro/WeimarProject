@@ -1,0 +1,39 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  justify-content: center;
+  align-items: center;
+  margin-top: 150px;
+  .title {
+    font-size: 20px;
+  }
+  .sign-in {
+    font-size: 16px;
+    color: #ffffff;
+    background-color: #34a853;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-weight: bold;
+    cursor: pointer;
+    text-align: center;
+    display: inline-block;
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease-in-out;
+
+    &:hover {
+      background-color: #2c8c47;
+      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.3);
+      transform: translateY(-2px);
+    }
+
+    &:active {
+      transform: scale(0.95);
+      box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.2);
+    }
+  }
+}
+
+@media only screen and (min-width: 572px) and (max-width: 992px) {
+}

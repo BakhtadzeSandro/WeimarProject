@@ -1,0 +1,18 @@
+<div class="container">
+  <div class="orders grid">
+    @for (order of orders; track $index) {
+    <app-order-card
+      [order]="order"
+      [deliveryPrice]="4"
+      [totalOrders]="allOrdersLength"
+      class="col-12 md:col-6 xl:col-4"
+    ></app-order-card>
+    }
+  </div>
+  <div class="total-price-box">
+    <div class="total-content">
+      <h4>Total Price for Entire Order</h4>
+      <p>{{ orderPrice }} GEL</p>
+    </div>
+  </div>
+</div>

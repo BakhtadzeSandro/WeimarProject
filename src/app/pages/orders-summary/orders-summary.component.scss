@@ -1,0 +1,38 @@
+.container {
+  width: 80%;
+  margin: 0 auto;
+  padding-top: 100px;
+
+  .total-price-box {
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 15px 20px;
+    margin: 20px auto;
+    text-align: center;
+    width: 100%;
+    max-width: 400px;
+    font-family: Arial, sans-serif;
+  }
+
+  .total-content h4 {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 8px;
+  }
+
+  .total-content p {
+    font-size: 22px;
+    color: #4caf50;
+    font-weight: bold;
+    margin: 0;
+  }
+
+  @media (max-width: 768px) {
+    .total-price-box {
+      width: 90%;
+    }
+  }
+}

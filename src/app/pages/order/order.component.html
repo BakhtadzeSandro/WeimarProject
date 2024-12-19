@@ -1,0 +1,95 @@
+<div class="container">
+  <p-toast />
+  <div class="title">Choose Your Fresh Shawarma</div>
+  <div class="form">
+    <form [formGroup]="orderForm()">
+      <div class="old-order mt-5">
+        <div class="see-order-button">
+          <button
+            pButton
+            type="button"
+            class="mt-3"
+            [disabled]="!previousOrder"
+            (click)="loadPreviousOrder()"
+          >
+            Use my last order
+          </button>
+        </div>
+        <div class="see-order-button">
+          <button
+            pButton
+            type="button"
+            class="mt-3"
+            [disabled]="!previousOrder"
+            (click)="showPreviousOrder()"
+          >
+            See last order
+          </button>
+        </div>
+      </div>
+      <div class="include-all mt-5">
+        <p-radiobutton
+          formControlName="withEverything"
+          inputId="withEverything"
+          [value]="true"
+        />
+        <label for="withEverything" class="ml-2">With Everything</label>
+      </div>
+      <div class="size mt-5">
+        <label for="size">Choose Size</label>
+        <p-select
+          id="size"
+          formControlName="size"
+          [options]="productInfoOptions"
+          optionLabel="label"
+          placeholder="Select Size"
+          styleClass="w-full md:w-80 mt-3"
+        />
+      </div>
+      <div class="restrictions mt-5">
+        <label for="restrictions">Choose Restrictions</label>
+        <p-multiselect
+          id="restrictions"
+          formControlName="restrictions"
+          [options]="ingredientOptions"
+          [maxSelectedLabels]="5"
+          optionLabel="label"
+          placeholder="Select Restrictions"
+          styleClass="w-full md:w-80 mt-3"
+        />
+      </div>
+      <div class="adjustments mt-5">
+        <label for="adjustments">Choose Adjustments</label>
+        <p-multiselect
+          id="adjustments"
+          formControlName="adjustments"
+          [options]="ingredientAdjustmentOptions"
+          [maxSelectedLabels]="5"
+          optionLabel="label"
+          [showToggleAll]="false"
+          placeholder="Select Adjustments"
+          styleClass="w-full md:w-80 mt-3"
+          (onChange)="onIngredientAdjustment($event)"
+        />
+      </div>
+    </form>
+    @if (orderForm().controls.size.value?.price) {
+    <div class="price mt-3">
+      Price: {{ orderForm().controls.size.value?.price }}
+    </div>
+    }
+    <div class="button-box mt-3">
+      <button pButton (click)="submitOrder()" type="button" class="submit-btn">
+        Send to Levancho
+      </button>
+      <button
+        pButton
+        (click)="navigateToOrdersList()"
+        type="button"
+        class="submit-btn"
+      >
+        See orders
+      </button>
+    </div>
+  </div>
+</div>

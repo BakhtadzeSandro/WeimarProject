@@ -1,0 +1,33 @@
+<div class="order-dialog">
+  <div class="order-details">
+    <p><strong>Price:</strong> {{ data?.productDetails?.price }} GEL</p>
+    <p><strong>Size:</strong> {{ data?.productDetails?.size }}</p>
+    <p>
+      <strong>Restrictions: </strong>
+      <span
+        *ngIf="data?.productDetails?.restrictions?.length; else noRestrictions"
+      >
+        {{ data?.productDetails?.restrictions?.join(", ") }}
+      </span>
+      <ng-template #noRestrictions> None</ng-template>
+    </p>
+    <p>
+      <strong>With Everything: </strong>
+      {{ data?.productDetails?.withEverything ? "Yes" : "No" }}
+    </p>
+    <p>
+      <strong>Adjustments: </strong>
+      <span *ngIf="data?.productDetails?.adjustment?.length; else noData">
+        {{ data?.productDetails?.adjustment?.join(", ") }}
+      </span>
+      <ng-template #noData> None</ng-template>
+    </p>
+    <!-- <p>
+      <strong>Additional Comment:</strong>
+      {{
+        data?.productDetails?.additionalComment ||
+          "No additional comment was added"
+      }}
+    </p> -->
+  </div>
+</div>

@@ -1,0 +1,47 @@
+<div class="order-container">
+  @for (user of order().users; track $index) {
+  <div class="user">
+    <div class="photo">
+      <img [src]="user.photoUrl" alt="User Photo" />
+    </div>
+    <div class="name">{{ user.orderedBy }}</div>
+  </div>
+  }
+
+  <div class="order-details">
+    <p><strong>Price:</strong> {{ order().productDetails.price }} GEL</p>
+    <p><strong>Size:</strong> {{ order().productDetails.size }}</p>
+    <p>
+      <strong>Restrictions: </strong>
+      <span *ngIf="order()?.productDetails?.restrictions?.length; else noData">
+        {{ order().productDetails.restrictions?.join(", ") }}
+      </span>
+      <ng-template #noData> None</ng-template>
+    </p>
+    <p>
+      <strong>Adjustments: </strong>
+      <span *ngIf="order().productDetails?.adjustment?.length; else noData">
+        {{ order().productDetails.adjustment?.join(", ") }}
+      </span>
+      <ng-template #noData> None</ng-template>
+    </p>
+    <p>
+      <strong>With Everything: </strong>
+      {{ order().productDetails.withEverything ? "Yes" : "No" }}
+    </p>
+    <!-- <p>
+      <strong>Additional Comment:</strong>
+      {{ order()?.productDetails?.additionalComment || "None" }}
+    </p> -->
+    <p>
+      <strong>Total Price(With Delivery):</strong>
+      {{ totalPrice }}
+    </p>
+    @if (order().count > 1) {
+    <p>
+      <strong>Each Pays</strong>
+      {{ totalPrice ? totalPrice / order().count : 0 }}
+    </p>
+    }
+  </div>
+</div>
