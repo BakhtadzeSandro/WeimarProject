@@ -1,7 +1,52 @@
+.check-last-orders {
+  // width: 90%;
+  // padding-top: 30px;
+  padding: 25px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  .back-to-orders {
+    margin-bottom: 10px;
+  }
+
+  .back-link {
+    font-size: 14px;
+    color: #007bff;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s ease, transform 0.3s ease;
+    cursor: pointer;
+    width: fit-content;
+  }
+
+  .back-link:hover {
+    color: #0056b3;
+    transform: translateY(-2px);
+  }
+  .check-last-orders-text {
+    color: rgb(133, 99, 99);
+    font-size: 18px;
+    font-weight: bold;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+  }
+}
+
 .container {
   width: 80%;
   margin: 0 auto;
-  padding-top: 100px;
+  padding-top: 10px;
+  .no-orders-message {
+    text-align: center;
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 20px;
+    border-radius: 5px;
+    margin: 20px auto;
+    .no-orders-message h3 {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+  }
 
   .total-price-box {
     background-color: #f9f9f9;
@@ -29,10 +74,14 @@
     font-weight: bold;
     margin: 0;
   }
+}
 
-  @media (max-width: 768px) {
-    .total-price-box {
-      width: 90%;
-    }
+@media (max-width: 768px) {
+  .container {
+    width: 100%;
+    padding: 25px;
+  }
+  .total-price-box {
+    width: 90%;
   }
 }

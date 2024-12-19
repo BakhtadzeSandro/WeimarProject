@@ -1,6 +1,24 @@
+<div class="check-last-orders">
+  <div class="back-to-orders">
+    <div class="back-link" (click)="backToOrderPage()">Back to Order Page</div>
+  </div>
+  <div class="check-last-orders-text mt-3">Check Last Orders</div>
+  <p-datepicker
+    class="mt-3"
+    [(ngModel)]="selectedDate"
+    [showIcon]="true"
+    [showOnFocus]="true"
+    [readonlyInput]="true"
+    (ngModelChange)="retrieveOrdersForSpecificDate()"
+  />
+</div>
 <div class="container">
   <div class="orders grid">
-    @for (order of orders; track $index) {
+    @if (orders?.length === 0) {
+    <div class="no-orders-message">
+      <h3>No Orders Available</h3>
+    </div>
+    } @for (order of orders; track $index) {
     <app-order-card
       [order]="order"
       [deliveryPrice]="4"
@@ -9,10 +27,12 @@
     ></app-order-card>
     }
   </div>
+  @if (orders?.length) {
   <div class="total-price-box">
     <div class="total-content">
       <h4>Total Price for Entire Order</h4>
       <p>{{ orderPrice }} GEL</p>
     </div>
   </div>
+  }
 </div>
