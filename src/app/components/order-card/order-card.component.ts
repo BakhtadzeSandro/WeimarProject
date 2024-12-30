@@ -6,13 +6,14 @@ import {
 } from '@angular/core';
 import { GroupedOrders, Order } from '../../models/order.model';
 import { CommonModule } from '@angular/common';
+import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
   selector: 'app-order-card',
   templateUrl: './order-card.component.html',
   styleUrls: ['./order-card.component.scss'],
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TooltipModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OrderCardComponent implements OnInit {
