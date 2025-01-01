@@ -4,6 +4,7 @@ import { OrderComponent } from './pages/order/order.component';
 import { OrdersSummaryComponent } from './pages/orders-summary/orders-summary.component';
 import { anonymGuard } from './guards/anonym.guard';
 import { authGuard } from './guards/auth.guard';
+import { AllOrdersComponent } from './pages/all-orders/all-orders.component';
 
 export const routes: Routes = [
   {
@@ -19,6 +20,11 @@ export const routes: Routes = [
   {
     path: 'order',
     component: OrderComponent,
+    canActivate: [authGuard],
+  },
+  {
+    path: 'all-order',
+    component: AllOrdersComponent,
     canActivate: [authGuard],
   },
   {
