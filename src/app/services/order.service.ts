@@ -72,6 +72,32 @@ export class OrderService {
     return data as IngredientAdjustment[];
   }
 
+  async createNewGroup(order: Order) {
+    const today = new Date('12-27-2024');
+    const formattedDate = `${
+      today.getMonth() + 1
+    }-${today.getDate()}-${today.getFullYear()}`;
+
+    const docRef = doc(this.db, 'orders', formattedDate);
+
+    try {
+      const docSnapshot = await getDoc(docRef);
+
+      if (docSnapshot.exists()) {
+        await updateDoc(docRef, {
+          orders: arrayUnion(order),
+        });
+      } else {
+        await setDoc(docRef, {
+          orders: [order],
+        });
+      }
+      this.router.navigate(['order/' + order.creatorId]);
+    } catch (error) {
+      console.error('Error creating new group:', error);
+    }
+  }
+
   async submitOrder(order: Order) {
     const today = new Date();
     const formattedDate = `${

@@ -18,7 +18,7 @@ export const routes: Routes = [
     canActivate: [anonymGuard],
   },
   {
-    path: 'order',
+    path: 'order/:creatorId',
     component: OrderComponent,
     canActivate: [authGuard],
   },

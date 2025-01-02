@@ -18,14 +18,16 @@ import {
 } from '../../models/order.model';
 import { TextareaModule } from 'primeng/textarea';
 import { ButtonModule } from 'primeng/button';
-import { switchMap, tap } from 'rxjs';
+import { combineLatest, switchMap, tap } from 'rxjs';
 import { Select } from 'primeng/select';
 import { AuthService } from '../../services/auth.service';
 import { Toast } from 'primeng/toast';
 import { ToastrService } from 'ngx-toastr';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { PreviousOrderModalComponent } from '../../components/previous-order-modal/previous-order-modal.component';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
+import { UsersService } from '../../services/users.service';
+import { FirestoreUser } from '../../models/user.model';
 
 @Component({
   selector: 'app-order',
@@ -43,7 +45,7 @@ import { Router } from '@angular/router';
     Select,
     Toast,
   ],
-  providers: [OrderService, ToastrService, DialogService],
+  providers: [ToastrService, DialogService],
 })
 export class OrderComponent implements OnInit {
   private orderService = inject(OrderService);
@@ -52,6 +54,8 @@ export class OrderComponent implements OnInit {
   private toastr = inject(ToastrService);
   private dialogService = inject(DialogService);
   private router = inject(Router);
+  private activatedRoute = inject(ActivatedRoute);
+  private UsersService = inject(UsersService);
 
   ref: DynamicDialogRef | undefined;
 
@@ -62,6 +66,8 @@ export class OrderComponent implements OnInit {
   ingredientOptions: MultiselectOption[] = [];
   productInfoOptions: MultiselectOption[] = [{ label: '', value: '' }];
   ingredientAdjustmentOptions: MultiselectOption[] = [];
+  orderCreator: FirestoreUser | undefined;
+  orderCreatorId: string | undefined;
 
   constructor() {}
 
@@ -236,6 +242,7 @@ export class OrderComponent implements OnInit {
   }
 
   submitOrder() {
+    // TODO: add check if creator submits or different user
     if (this.checkFormValidity()) {
       return this.authService
         .getCurrentUser()
@@ -255,9 +262,11 @@ export class OrderComponent implements OnInit {
                   (val) => val.value
                 ),
               },
+              createdBy: this.orderCreator?.displayName,
+              creatorPhotoUrl: this.orderCreator?.photoURL,
+              creatorId: this.orderCreatorId,
             };
             localStorage.setItem('previousOrder', JSON.stringify(payload));
-
             return this.orderService.submitOrder(payload);
           })
         )
@@ -300,6 +309,15 @@ export class OrderComponent implements OnInit {
     });
   }
 
+  mapOrderCreatorData(user: FirestoreUser) {
+    this.orderCreator = {
+      displayName: user?.displayName ?? '',
+      photoURL: user?.photoURL ?? '',
+      email: user?.email ?? '',
+      accountNumber: user?.accountNumber ?? 0,
+    };
+  }
+
   getProductInfo() {
     this.orderService.getProductSizesAndPrices().then((val) => {
       this.mapProductsInfo(val);
@@ -318,6 +336,15 @@ export class OrderComponent implements OnInit {
     });
   }
 
+  getOrderCreator() {
+    this.orderCreatorId = this.activatedRoute.snapshot.params['creatorId'];
+    this.UsersService.getUserWithId(this.orderCreatorId ?? '').then((val) => {
+      if (val) {
+        this.mapOrderCreatorData(val);
+      }
+    });
+  }
+
   ngOnInit() {
     this.listenToWithEverythingControl();
     this.checkPreviousOrder();
@@ -325,5 +352,6 @@ export class OrderComponent implements OnInit {
     this.getIngredients();
     this.getProductInfo();
     this.getIngredientAdjustments();
+    this.getOrderCreator();
   }
 }

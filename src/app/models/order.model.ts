@@ -36,6 +36,7 @@ export interface Order {
   photoUrl: string | null | undefined;
   createdBy: string | null | undefined;
   creatorPhotoUrl: string | null | undefined;
+  creatorId?: string | null | undefined;
   productDetails: productDetails;
 }
 
@@ -53,4 +54,5 @@ export interface OrderUser {
 export interface OrderCreatorUser {
   createdBy: string;
   creatorPhotoUrl: string;
+  creatorId: string;
 }
