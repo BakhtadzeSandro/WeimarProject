@@ -18,14 +18,17 @@ import {
 } from '../../models/order.model';
 import { TextareaModule } from 'primeng/textarea';
 import { ButtonModule } from 'primeng/button';
-import { switchMap, tap } from 'rxjs';
+import { combineLatest, switchMap, tap } from 'rxjs';
 import { Select } from 'primeng/select';
 import { AuthService } from '../../services/auth.service';
 import { Toast } from 'primeng/toast';
 import { ToastrService } from 'ngx-toastr';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { PreviousOrderModalComponent } from '../../components/previous-order-modal/previous-order-modal.component';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
+import { UsersService } from '../../services/users.service';
+import { FirestoreUser } from '../../models/user.model';
+import { or } from 'firebase/firestore';
 
 @Component({
   selector: 'app-order',
@@ -43,15 +46,17 @@ import { Router } from '@angular/router';
     Select,
     Toast,
   ],
-  providers: [OrderService, ToastrService, DialogService],
+  providers: [ToastrService, DialogService],
 })
 export class OrderComponent implements OnInit {
   private orderService = inject(OrderService);
+  private userService = inject(UsersService);
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private toastr = inject(ToastrService);
   private dialogService = inject(DialogService);
   private router = inject(Router);
+  private activatedRoute = inject(ActivatedRoute);
 
   ref: DynamicDialogRef | undefined;
 
@@ -62,11 +67,12 @@ export class OrderComponent implements OnInit {
   ingredientOptions: MultiselectOption[] = [];
   productInfoOptions: MultiselectOption[] = [{ label: '', value: '' }];
   ingredientAdjustmentOptions: MultiselectOption[] = [];
+  orderCreator: FirestoreUser | undefined;
 
   constructor() {}
 
   navigateToOrdersList() {
-    this.router.navigate(['orders-summary']);
+    this.router.navigate([`order/${this.orderCreator?.id}/summary`]);
   }
 
   showPreviousOrder() {
@@ -240,10 +246,10 @@ export class OrderComponent implements OnInit {
       return this.authService
         .getCurrentUser()
         .pipe(
-          switchMap((val) => {
+          switchMap((currentUser) => {
             const payload: Order = {
-              orderedBy: val?.displayName,
-              photoUrl: val?.photoURL,
+              orderedBy: currentUser?.displayName,
+              photoUrl: currentUser?.photoURL,
               productDetails: {
                 price: this.orderForm().controls.size.value?.price,
                 size: this.orderForm().controls.size.value?.value,
@@ -256,9 +262,15 @@ export class OrderComponent implements OnInit {
                 ),
               },
             };
+
             localStorage.setItem('previousOrder', JSON.stringify(payload));
 
-            return this.orderService.submitOrder(payload);
+            console.log(this.orderCreator?.id);
+
+            return this.orderService.submitOrder(
+              payload,
+              this.orderCreator?.id ?? ''
+            );
           })
         )
         .subscribe();
@@ -318,6 +330,15 @@ export class OrderComponent implements OnInit {
     });
   }
 
+  getOrderCreator() {
+    const orderCreatorId = this.activatedRoute.snapshot.params['creatorId'];
+    this.userService.getUserWithId(orderCreatorId ?? '').then((val) => {
+      if (val) {
+        this.orderCreator = val;
+      }
+    });
+  }
+
   ngOnInit() {
     this.listenToWithEverythingControl();
     this.checkPreviousOrder();
@@ -325,5 +346,6 @@ export class OrderComponent implements OnInit {
     this.getIngredients();
     this.getProductInfo();
     this.getIngredientAdjustments();
+    this.getOrderCreator();
   }
 }

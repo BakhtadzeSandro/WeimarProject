@@ -4,6 +4,7 @@ import { OrderComponent } from './pages/order/order.component';
 import { OrdersSummaryComponent } from './pages/orders-summary/orders-summary.component';
 import { anonymGuard } from './guards/anonym.guard';
 import { authGuard } from './guards/auth.guard';
+import { AllOrdersComponent } from './pages/all-orders/all-orders.component';
 
 export const routes: Routes = [
   {
@@ -17,12 +18,17 @@ export const routes: Routes = [
     canActivate: [anonymGuard],
   },
   {
-    path: 'order',
+    path: 'order/:creatorId',
     component: OrderComponent,
     canActivate: [authGuard],
   },
   {
-    path: 'orders-summary',
+    path: 'all-order',
+    component: AllOrdersComponent,
+    canActivate: [authGuard],
+  },
+  {
+    path: 'order/:creatorId/summary',
     component: OrdersSummaryComponent,
     canActivate: [authGuard],
   },

@@ -1,0 +1,18 @@
+<div class="order-groups-container">
+  <h1>Order Groups</h1>
+  <div class="order-groups">
+    @for(creator of orderCreators; track $index) {
+    <div class="order-group" (click)="clickOrderGroup(creator)">
+      <div class="creator-info">
+        <div class="photo">
+          <img [src]="creator.photoUrl" alt="Creator Photo" />
+        </div>
+        <p class="name">{{ creator.name }} and friends</p>
+      </div>
+    </div>
+    }
+  </div>
+  <div class="actions">
+    <button class="create-new" (click)="createNewGroup()">Create New</button>
+  </div>
+</div>
