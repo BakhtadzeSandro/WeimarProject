@@ -43,7 +43,7 @@ export class AuthService {
 
         // const token = credential?.accessToken;
         // const user = result.user;
-        this.router.navigate(['order/' + result.user.uid]);
+        this.router.navigate(['all-order']);
       })
       .catch((error) => {
         console.log(error);
