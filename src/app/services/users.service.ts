@@ -3,6 +3,7 @@ import { getFirestore, doc, getDoc } from '@angular/fire/firestore';
 import { FirestoreUser } from '../models/user.model';
 import { initializeApp } from '@angular/fire/app';
 import { firebaseConfig } from '../../../environment';
+import { DocumentData, DocumentReference } from 'firebase/firestore';
 
 @Injectable({
   providedIn: 'root',
@@ -24,5 +25,9 @@ export class UsersService {
     } else {
       return null;
     }
+  }
+
+  getUserRef(userId: string): DocumentReference<FirestoreUser> {
+    return doc<FirestoreUser, DocumentData>(this.db, 'users', userId);
   }
 }

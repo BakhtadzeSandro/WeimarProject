@@ -1,9 +1,13 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { OrderService } from '../../services/order.service';
-import { Order, OrderCreatorUser } from '../../models/order.model';
+import { Order } from '../../models/order.model';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
-import { switchMap } from 'rxjs/operators';
+import { switchMap, tap } from 'rxjs/operators';
+import { of } from 'rxjs';
+import { UsersService } from '../../services/users.service';
+import { doc, DocumentReference } from 'firebase/firestore';
+import { FirestoreUser } from '../../models/user.model';
 
 @Component({
   selector: 'app-all-orders',
@@ -15,64 +19,58 @@ import { switchMap } from 'rxjs/operators';
 })
 export class AllOrdersComponent implements OnInit {
   private orderService = inject(OrderService);
+  private authService = inject(AuthService);
+  private userService = inject(UsersService);
   private router = inject(Router);
-  orderCreators: OrderCreatorUser[] = [];
-  authService = inject(AuthService);
+  orderCreators: FirestoreUser[] = [];
+  orderCreatorsIds: string[] | undefined;
 
   constructor() {}
 
-  clickOrderGroup(orderCreator: OrderCreatorUser) {
-    this.router.navigate(['order/' + orderCreator.creatorId]);
+  clickOrderGroup(orderCreator: FirestoreUser) {
+    localStorage.setItem('orderCreator', JSON.stringify(orderCreator));
+    this.router.navigate(['order/' + orderCreator.id]);
   }
 
   createNewGroup() {
-    // TODO: Not let the user create a new group if they already have one or allow them to remove their current group
     return this.authService
       .getCurrentUser()
       .pipe(
         switchMap((val) => {
-          const payload: Order = {
-            orderedBy: val?.displayName,
-            photoUrl: val?.photoURL,
-            productDetails: {
-              withEverything: false,
-              restrictions: [],
-              adjustment: [],
-              size: '',
-              price: 0,
-            },
-            createdBy: val?.displayName,
-            creatorPhotoUrl: val?.photoURL,
-            creatorId: val?.uid,
-          };
-
-          return this.orderService.createNewGroup(payload);
+          if (!val) return of(null);
+          return this.orderService.createNewGroup(val.uid);
         })
       )
       .subscribe();
   }
 
-  getOrders(date: Date | undefined) {
-    if (date) {
-      const formattedDate = `${
-        date.getMonth() + 1
-      }-${date.getDate()}-${date.getFullYear()}`;
-      this.orderService.retrieveOrders(formattedDate).then((orders) => {
-        this.orderCreators = orders
-          .filter(
-            (order, index, self) =>
-              index === self.findIndex((o) => o.creatorId === order.creatorId)
-          )
-          .map((o) => ({
-            createdBy: o.createdBy ?? '',
-            creatorPhotoUrl: o.creatorPhotoUrl ?? '',
-            creatorId: o.creatorId ?? '',
-          }));
-      });
+  async getCreators(date: Date | undefined) {
+    if (!date) return;
+
+    const formattedDate = `${
+      date.getMonth() + 1
+    }-${date.getDate()}-${date.getFullYear()}`;
+    try {
+      const orders = await this.orderService.retrieveOrders(formattedDate);
+
+      if (!orders) return;
+
+      this.orderCreatorsIds = Object.keys(orders);
+
+      const creatorPromises = this.orderCreatorsIds.map((id) =>
+        this.userService.getUserWithId(id)
+      );
+      const creators = await Promise.all(creatorPromises);
+
+      this.orderCreators = creators.filter(
+        (creator) => creator !== undefined || creator !== null
+      ) as FirestoreUser[];
+    } catch (error) {
+      console.error('Error retrieving creators:', error);
     }
   }
 
   ngOnInit() {
-    this.getOrders(new Date('12-27-2024'));
+    this.getCreators(new Date());
   }
 }

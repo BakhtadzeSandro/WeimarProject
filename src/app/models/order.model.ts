@@ -1,3 +1,6 @@
+import { DocumentReference } from 'firebase/firestore';
+import { FirestoreUser } from './user.model';
+
 export interface Ingredient {
   id: string;
   product: {
@@ -34,9 +37,6 @@ export interface Order {
   id?: string | null | undefined;
   orderedBy: string | null | undefined;
   photoUrl: string | null | undefined;
-  createdBy: string | null | undefined;
-  creatorPhotoUrl: string | null | undefined;
-  creatorId?: string | null | undefined;
   productDetails: productDetails;
 }
 
@@ -49,10 +49,4 @@ export interface GroupedOrders {
 export interface OrderUser {
   orderedBy: string;
   photoUrl: string;
-}
-
-export interface OrderCreatorUser {
-  createdBy: string;
-  creatorPhotoUrl: string;
-  creatorId: string;
 }

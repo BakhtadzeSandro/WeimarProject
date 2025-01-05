@@ -28,6 +28,7 @@ import { PreviousOrderModalComponent } from '../../components/previous-order-mod
 import { ActivatedRoute, Router } from '@angular/router';
 import { UsersService } from '../../services/users.service';
 import { FirestoreUser } from '../../models/user.model';
+import { or } from 'firebase/firestore';
 
 @Component({
   selector: 'app-order',
@@ -49,13 +50,13 @@ import { FirestoreUser } from '../../models/user.model';
 })
 export class OrderComponent implements OnInit {
   private orderService = inject(OrderService);
+  private userService = inject(UsersService);
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private toastr = inject(ToastrService);
   private dialogService = inject(DialogService);
   private router = inject(Router);
   private activatedRoute = inject(ActivatedRoute);
-  private UsersService = inject(UsersService);
 
   ref: DynamicDialogRef | undefined;
 
@@ -67,12 +68,11 @@ export class OrderComponent implements OnInit {
   productInfoOptions: MultiselectOption[] = [{ label: '', value: '' }];
   ingredientAdjustmentOptions: MultiselectOption[] = [];
   orderCreator: FirestoreUser | undefined;
-  orderCreatorId: string | undefined;
 
   constructor() {}
 
   navigateToOrdersList() {
-    this.router.navigate(['orders-summary']);
+    this.router.navigate([`order/${this.orderCreator?.id}/summary`]);
   }
 
   showPreviousOrder() {
@@ -242,15 +242,14 @@ export class OrderComponent implements OnInit {
   }
 
   submitOrder() {
-    // TODO: add check if creator submits or different user
     if (this.checkFormValidity()) {
       return this.authService
         .getCurrentUser()
         .pipe(
-          switchMap((val) => {
+          switchMap((currentUser) => {
             const payload: Order = {
-              orderedBy: val?.displayName,
-              photoUrl: val?.photoURL,
+              orderedBy: currentUser?.displayName,
+              photoUrl: currentUser?.photoURL,
               productDetails: {
                 price: this.orderForm().controls.size.value?.price,
                 size: this.orderForm().controls.size.value?.value,
@@ -262,12 +261,16 @@ export class OrderComponent implements OnInit {
                   (val) => val.value
                 ),
               },
-              createdBy: this.orderCreator?.displayName,
-              creatorPhotoUrl: this.orderCreator?.photoURL,
-              creatorId: this.orderCreatorId,
             };
+
             localStorage.setItem('previousOrder', JSON.stringify(payload));
-            return this.orderService.submitOrder(payload);
+
+            console.log(this.orderCreator?.id);
+
+            return this.orderService.submitOrder(
+              payload,
+              this.orderCreator?.id ?? ''
+            );
           })
         )
         .subscribe();
@@ -309,15 +312,6 @@ export class OrderComponent implements OnInit {
     });
   }
 
-  mapOrderCreatorData(user: FirestoreUser) {
-    this.orderCreator = {
-      displayName: user?.displayName ?? '',
-      photoURL: user?.photoURL ?? '',
-      email: user?.email ?? '',
-      accountNumber: user?.accountNumber ?? 0,
-    };
-  }
-
   getProductInfo() {
     this.orderService.getProductSizesAndPrices().then((val) => {
       this.mapProductsInfo(val);
@@ -337,10 +331,10 @@ export class OrderComponent implements OnInit {
   }
 
   getOrderCreator() {
-    this.orderCreatorId = this.activatedRoute.snapshot.params['creatorId'];
-    this.UsersService.getUserWithId(this.orderCreatorId ?? '').then((val) => {
+    const orderCreatorId = this.activatedRoute.snapshot.params['creatorId'];
+    this.userService.getUserWithId(orderCreatorId ?? '').then((val) => {
       if (val) {
-        this.mapOrderCreatorData(val);
+        this.orderCreator = val;
       }
     });
   }

@@ -34,6 +34,7 @@ export class AuthService {
         const credential = GoogleAuthProvider.credentialFromResult(result);
 
         await setDoc(doc(this.db, 'users', result.user.uid), {
+          id: result.user.uid,
           name: result.user.displayName,
           email: result.user.email,
           photoUrl: result.user.photoURL,

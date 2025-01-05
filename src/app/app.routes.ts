@@ -28,7 +28,7 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
-    path: 'orders-summary',
+    path: 'order/:creatorId/summary',
     component: OrdersSummaryComponent,
     canActivate: [authGuard],
   },

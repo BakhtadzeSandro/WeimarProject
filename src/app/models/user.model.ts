@@ -4,8 +4,9 @@ export interface User {
 }
 
 export interface FirestoreUser {
+  id: string;
   email: string;
-  displayName: string;
-  photoURL: string;
-  accountNumber: number;
+  name: string;
+  photoUrl: string;
+  accountNumber: string;
 }

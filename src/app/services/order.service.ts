@@ -72,8 +72,8 @@ export class OrderService {
     return data as IngredientAdjustment[];
   }
 
-  async createNewGroup(order: Order) {
-    const today = new Date('12-27-2024');
+  async createNewGroup(creatorId: string) {
+    const today = new Date();
     const formattedDate = `${
       today.getMonth() + 1
     }-${today.getDate()}-${today.getFullYear()}`;
@@ -84,21 +84,28 @@ export class OrderService {
       const docSnapshot = await getDoc(docRef);
 
       if (docSnapshot.exists()) {
+        if (docSnapshot.data()[creatorId]) {
+          alert(
+            'You already have a group today and cannot create another. But you can still order from other groups.'
+          );
+          return;
+        }
         await updateDoc(docRef, {
-          orders: arrayUnion(order),
+          [creatorId]: [],
         });
       } else {
         await setDoc(docRef, {
-          orders: [order],
+          [creatorId]: [],
         });
       }
-      this.router.navigate(['order/' + order.creatorId]);
+
+      this.router.navigate(['order/' + creatorId]);
     } catch (error) {
       console.error('Error creating new group:', error);
     }
   }
 
-  async submitOrder(order: Order) {
+  async submitOrder(order: Order, creatorId: string) {
     const today = new Date();
     const formattedDate = `${
       today.getMonth() + 1
@@ -111,16 +118,38 @@ export class OrderService {
 
       if (docSnapshot.exists()) {
         await updateDoc(docRef, {
-          orders: arrayUnion(order),
+          [creatorId]: arrayUnion(order),
         });
       } else {
         await setDoc(docRef, {
-          orders: [order],
+          [creatorId]: [order],
         });
       }
-      this.router.navigate(['orders-summary']);
+      console.log('Order submitted successfully');
+
+      // this.router.navigate([`order/${creatorId}/summary`]);
+      this.router.navigateByUrl(`order/${creatorId}/summary`);
     } catch (error) {
       console.error('Error submitting order:', error);
+    }
+  }
+
+  async retrieveOrdersPerUser(date: string, creatorId: string) {
+    const docRef = doc(this.db, 'orders', date);
+
+    try {
+      const docSnapshot = await getDoc(docRef);
+
+      if (docSnapshot.exists()) {
+        const data = docSnapshot.data();
+
+        return data[creatorId] as Order[];
+      } else {
+        return [];
+      }
+    } catch (error) {
+      console.error('Error retrieving orders:', error);
+      throw error;
     }
   }
 
@@ -132,7 +161,9 @@ export class OrderService {
 
       if (docSnapshot.exists()) {
         const data = docSnapshot.data();
-        return data['orders'] as Order[];
+        return data as {
+          [key: string]: Order[];
+        };
       } else {
         return [];
       }
