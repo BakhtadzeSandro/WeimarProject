@@ -1,14 +1,22 @@
+import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { OrderService } from '../../services/order.service';
-import { MultiSelectModule } from 'primeng/multiselect';
 import {
   FormBuilder,
   FormGroup,
   FormsModule,
   ReactiveFormsModule,
 } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router } from '@angular/router';
+import { ToastrService } from 'ngx-toastr';
+import { ButtonModule } from 'primeng/button';
+import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
+import { MultiSelectModule } from 'primeng/multiselect';
 import { RadioButton } from 'primeng/radiobutton';
+import { Select } from 'primeng/select';
+import { TextareaModule } from 'primeng/textarea';
+import { Toast } from 'primeng/toast';
+import { switchMap, tap } from 'rxjs';
+import { PreviousOrderModalComponent } from '../../components/previous-order-modal/previous-order-modal.component';
 import { MultiselectOption, OrderForm } from '../../models/forms.model';
 import {
   Ingredient,
@@ -16,19 +24,10 @@ import {
   Order,
   productInfo,
 } from '../../models/order.model';
-import { TextareaModule } from 'primeng/textarea';
-import { ButtonModule } from 'primeng/button';
-import { combineLatest, switchMap, tap } from 'rxjs';
-import { Select } from 'primeng/select';
-import { AuthService } from '../../services/auth.service';
-import { Toast } from 'primeng/toast';
-import { ToastrService } from 'ngx-toastr';
-import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { PreviousOrderModalComponent } from '../../components/previous-order-modal/previous-order-modal.component';
-import { ActivatedRoute, Router } from '@angular/router';
-import { UsersService } from '../../services/users.service';
 import { FirestoreUser } from '../../models/user.model';
-import { or } from 'firebase/firestore';
+import { AuthService } from '../../services/auth.service';
+import { OrderService } from '../../services/order.service';
+import { UsersService } from '../../services/users.service';
 
 @Component({
   selector: 'app-order',
@@ -46,7 +45,7 @@ import { or } from 'firebase/firestore';
     Select,
     Toast,
   ],
-  providers: [ToastrService, DialogService],
+  providers: [Router, ToastrService, DialogService],
 })
 export class OrderComponent implements OnInit {
   private orderService = inject(OrderService);
@@ -264,8 +263,6 @@ export class OrderComponent implements OnInit {
             };
 
             localStorage.setItem('previousOrder', JSON.stringify(payload));
-
-            console.log(this.orderCreator?.id);
 
             return this.orderService.submitOrder(
               payload,

@@ -1,13 +1,11 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { OrderService } from '../../services/order.service';
-import { Order } from '../../models/order.model';
 import { Router } from '@angular/router';
-import { AuthService } from '../../services/auth.service';
-import { switchMap, tap } from 'rxjs/operators';
 import { of } from 'rxjs';
-import { UsersService } from '../../services/users.service';
-import { doc, DocumentReference } from 'firebase/firestore';
+import { switchMap } from 'rxjs/operators';
 import { FirestoreUser } from '../../models/user.model';
+import { AuthService } from '../../services/auth.service';
+import { OrderService } from '../../services/order.service';
+import { UsersService } from '../../services/users.service';
 
 @Component({
   selector: 'app-all-orders',

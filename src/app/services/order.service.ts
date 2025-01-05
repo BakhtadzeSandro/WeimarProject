@@ -125,10 +125,8 @@ export class OrderService {
           [creatorId]: [order],
         });
       }
-      console.log('Order submitted successfully');
 
-      // this.router.navigate([`order/${creatorId}/summary`]);
-      this.router.navigateByUrl(`order/${creatorId}/summary`);
+      this.router.navigate([`order/${creatorId}/summary`]);
     } catch (error) {
       console.error('Error submitting order:', error);
     }

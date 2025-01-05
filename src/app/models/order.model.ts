@@ -1,6 +1,3 @@
-import { DocumentReference } from 'firebase/firestore';
-import { FirestoreUser } from './user.model';
-
 export interface Ingredient {
   id: string;
   product: {

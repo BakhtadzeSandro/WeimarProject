@@ -1,13 +1,13 @@
-import { Component, inject, OnInit } from '@angular/core';
-import { OrderService } from '../../services/order.service';
-import { GroupedOrders, Order } from '../../models/order.model';
-import { OrderCardComponent } from '../../components/order-card/order-card.component';
 import { CommonModule } from '@angular/common';
-import { isEqual } from 'lodash';
-import { DatePickerModule } from 'primeng/datepicker';
+import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { isEqual } from 'lodash';
+import { DatePickerModule } from 'primeng/datepicker';
+import { OrderCardComponent } from '../../components/order-card/order-card.component';
+import { GroupedOrders, Order } from '../../models/order.model';
 import { FirestoreUser } from '../../models/user.model';
+import { OrderService } from '../../services/order.service';
 import { UsersService } from '../../services/users.service';
 
 @Component({
@@ -104,6 +104,8 @@ export class OrdersSummaryComponent implements OnInit {
   }
 
   async getOrderCreator() {
+    // TODO: update orders in real time
+    // ** https://firebase.google.com/docs/firestore/query-data/listen
     const orderCreatorId = this.activatedRoute.snapshot.params['creatorId'];
 
     await this.userService.getUserWithId(orderCreatorId ?? '').then((val) => {
