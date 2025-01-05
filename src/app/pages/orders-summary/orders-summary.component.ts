@@ -16,7 +16,7 @@ import { UsersService } from '../../services/users.service';
   styleUrls: ['./orders-summary.component.scss'],
   standalone: true,
   imports: [OrderCardComponent, CommonModule, DatePickerModule, FormsModule],
-  providers: [OrderService, Router],
+  providers: [OrderService],
 })
 export class OrdersSummaryComponent implements OnInit {
   private orderService = inject(OrderService);
