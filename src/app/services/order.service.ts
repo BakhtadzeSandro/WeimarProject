@@ -170,4 +170,15 @@ export class OrderService {
       throw error;
     }
   }
+
+  leaveGroup(creatorId: string, updatedOrders: Order[]) {
+    const today = new Date();
+    const formattedDate = `${
+      today.getMonth() + 1
+    }-${today.getDate()}-${today.getFullYear()}`;
+
+    return updateDoc(doc(this.db, 'orders', formattedDate), {
+      [creatorId]: updatedOrders,
+    });
+  }
 }

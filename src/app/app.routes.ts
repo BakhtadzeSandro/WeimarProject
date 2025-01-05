@@ -23,7 +23,7 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
-    path: 'all-order',
+    path: 'all-orders',
     component: AllOrdersComponent,
     canActivate: [authGuard],
   },
