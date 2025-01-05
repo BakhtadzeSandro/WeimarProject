@@ -9,7 +9,7 @@ export const anonymGuard: CanActivateFn = (route, state) => {
   return authService.getCurrentUser().pipe(
     map((user) => {
       if (!user) return true;
-      router.navigate(['/order']);
+      router.navigate(['/all-order']);
       return false;
     })
   );

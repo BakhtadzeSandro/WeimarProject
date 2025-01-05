@@ -1,12 +1,14 @@
-import { Component, inject, OnInit } from '@angular/core';
-import { OrderService } from '../../services/order.service';
-import { GroupedOrders, Order } from '../../models/order.model';
-import { OrderCardComponent } from '../../components/order-card/order-card.component';
 import { CommonModule } from '@angular/common';
+import { Component, inject, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { isEqual } from 'lodash';
 import { DatePickerModule } from 'primeng/datepicker';
-import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { OrderCardComponent } from '../../components/order-card/order-card.component';
+import { GroupedOrders, Order } from '../../models/order.model';
+import { FirestoreUser } from '../../models/user.model';
+import { OrderService } from '../../services/order.service';
+import { UsersService } from '../../services/users.service';
 
 @Component({
   selector: 'app-orders-summary',
@@ -18,8 +20,10 @@ import { Router } from '@angular/router';
 })
 export class OrdersSummaryComponent implements OnInit {
   private orderService = inject(OrderService);
+  private userService = inject(UsersService);
   private router = inject(Router);
   private _originalOrders: Order[] | undefined;
+  private activatedRoute = inject(ActivatedRoute);
   deliveryPrice = 4;
   allOrdersLength: number | undefined;
 
@@ -28,6 +32,8 @@ export class OrdersSummaryComponent implements OnInit {
   similarOrdersFromDifferentUsers: any[] | undefined = [];
 
   orders: GroupedOrders[] | undefined;
+
+  orderCreator: FirestoreUser | undefined;
 
   get orderPrice() {
     if (this._originalOrders) {
@@ -45,7 +51,7 @@ export class OrdersSummaryComponent implements OnInit {
   constructor() {}
 
   backToOrderPage() {
-    this.router.navigate(['order']);
+    this.router.navigate([`order/${this.orderCreator?.id}`]);
   }
 
   retrieveOrdersForSpecificDate() {
@@ -80,17 +86,33 @@ export class OrdersSummaryComponent implements OnInit {
     return groupedOrders;
   }
 
-  getOrders(date: Date | undefined) {
+  async getOrders(date: Date | undefined) {
+    await this.getOrderCreator();
+
     if (date) {
       const formattedDate = `${
         date.getMonth() + 1
       }-${date.getDate()}-${date.getFullYear()}`;
-      this.orderService.retrieveOrders(formattedDate).then((orders) => {
-        this._originalOrders = orders;
-        this.orders = this.groupOrders(orders);
-        this.allOrdersLength = orders?.length;
-      });
+      this.orderService
+        .retrieveOrdersPerUser(formattedDate, this.orderCreator?.id ?? '')
+        .then((orders) => {
+          this.allOrdersLength = orders?.length;
+          this._originalOrders = orders;
+          this.orders = this.groupOrders(orders ?? []);
+        });
     }
+  }
+
+  async getOrderCreator() {
+    // TODO: update orders in real time
+    // ** https://firebase.google.com/docs/firestore/query-data/listen
+    const orderCreatorId = this.activatedRoute.snapshot.params['creatorId'];
+
+    await this.userService.getUserWithId(orderCreatorId ?? '').then((val) => {
+      if (val) {
+        this.orderCreator = val;
+      }
+    });
   }
 
   ngOnInit() {

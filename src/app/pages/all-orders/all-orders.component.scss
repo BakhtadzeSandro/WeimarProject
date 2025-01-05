@@ -1,0 +1,78 @@
+.order-groups-container {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.order-groups-container h1 {
+  font-size: 24px;
+  color: #333;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.create-new {
+  background-color: #4caf50;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.create-new:hover {
+  background-color: #45a049;
+}
+
+.order-groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.order-group {
+  background-color: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 15px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.creator-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.creator-info .photo {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.creator-info .photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.creator-info .name {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+}

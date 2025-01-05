@@ -1,6 +1,8 @@
 <div class="container">
   <p-toast />
-  <div class="title">Choose Your Fresh Shawarma</div>
+  <div class="title">
+    Choose Your Fresh Shawarma with {{ orderCreator?.name }}
+  </div>
   <div class="form">
     <form [formGroup]="orderForm()">
       <div class="old-order mt-5">

@@ -1,12 +1,12 @@
+import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
   input,
   OnInit,
 } from '@angular/core';
-import { GroupedOrders, Order } from '../../models/order.model';
-import { CommonModule } from '@angular/common';
 import { TooltipModule } from 'primeng/tooltip';
+import { GroupedOrders } from '../../models/order.model';
 
 @Component({
   selector: 'app-order-card',

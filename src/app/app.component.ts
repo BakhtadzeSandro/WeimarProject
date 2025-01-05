@@ -1,7 +1,6 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { HeaderComponent } from './components/header/header.component';
-import { AngularFireModule } from '@angular/fire/compat';
 
 @Component({
   selector: 'app-root',
