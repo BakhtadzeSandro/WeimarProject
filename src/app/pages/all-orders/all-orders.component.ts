@@ -13,7 +13,7 @@ import { UsersService } from '../../services/users.service';
   imports: [],
   templateUrl: './all-orders.component.html',
   styleUrl: './all-orders.component.scss',
-  providers: [Router],
+  providers: [],
 })
 export class AllOrdersComponent implements OnInit {
   private orderService = inject(OrderService);

@@ -45,7 +45,7 @@ import { UsersService } from '../../services/users.service';
     Select,
     Toast,
   ],
-  providers: [Router, ToastrService, DialogService],
+  providers: [ToastrService, DialogService],
 })
 export class OrderComponent implements OnInit {
   private orderService = inject(OrderService);
