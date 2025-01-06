@@ -3,7 +3,6 @@ import { Component, inject, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { isEqual } from 'lodash';
 import { of, switchMap } from 'rxjs';
-import { LeaveButtonComponent } from '../../components/leave-button/leave-button.component';
 import { OrderCardComponent } from '../../components/order-card/order-card.component';
 import { GroupedOrders, Order } from '../../models/order.model';
 import { FirestoreUser } from '../../models/user.model';
@@ -17,7 +16,7 @@ import { formatDateToDocName } from '../../utils/date.utils';
   templateUrl: './orders-summary.component.html',
   styleUrls: ['./orders-summary.component.scss'],
   standalone: true,
-  imports: [OrderCardComponent, CommonModule, LeaveButtonComponent],
+  imports: [OrderCardComponent, CommonModule],
   providers: [OrderService],
 })
 export class OrdersSummaryComponent implements OnInit {

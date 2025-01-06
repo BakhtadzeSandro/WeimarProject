@@ -28,7 +28,6 @@ import { FirestoreUser } from '../../models/user.model';
 import { AuthService } from '../../services/auth.service';
 import { OrderService } from '../../services/order.service';
 import { UsersService } from '../../services/users.service';
-import { LeaveButtonComponent } from '../../components/leave-button/leave-button.component';
 
 @Component({
   selector: 'app-order',
@@ -45,7 +44,6 @@ import { LeaveButtonComponent } from '../../components/leave-button/leave-button
     ButtonModule,
     Select,
     Toast,
-    LeaveButtonComponent,
   ],
   providers: [ToastrService, DialogService],
 })
