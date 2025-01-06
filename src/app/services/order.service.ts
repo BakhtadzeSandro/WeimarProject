@@ -7,6 +7,7 @@ import {
   getDoc,
   getDocs,
   getFirestore,
+  onSnapshot,
   setDoc,
   updateDoc,
 } from '@angular/fire/firestore';
@@ -21,6 +22,7 @@ import {
   productInfo,
 } from '../models/order.model';
 import { formatDateToDocName } from '../utils/date.utils';
+import { DocumentData, DocumentSnapshot } from 'firebase/firestore';
 
 @Injectable({
   providedIn: 'root',
@@ -108,11 +110,13 @@ export class OrderService {
       const docSnapshot = await getDoc(docRef);
 
       const orders = docSnapshot.data() ? docSnapshot.data()![creatorId] : [];
-      let newOrders: Order[] = [];
+      let finalOrders: Order[] = [];
+      let newOrder: boolean = false;
 
       if (orders.length > 0) {
-        newOrders = orders.map((o: Order) => {
+        finalOrders = orders.map((o: Order) => {
           if (o.orderedBy === order.orderedBy) {
+            newOrder = true;
             return order;
           }
           return o;
@@ -121,7 +125,7 @@ export class OrderService {
 
       if (docSnapshot.exists()) {
         await updateDoc(docRef, {
-          [creatorId]: newOrders.length === 0 ? arrayUnion(order) : newOrders,
+          [creatorId]: newOrder ? finalOrders : arrayUnion(order),
         });
       } else {
         await setDoc(docRef, {
@@ -135,23 +139,13 @@ export class OrderService {
     }
   }
 
-  async retrieveOrdersPerUser(date: string, creatorId: string) {
+  async retrieveOrdersPerUser(
+    date: string,
+    callback: (doc: DocumentSnapshot<DocumentData>) => void
+  ) {
     const docRef = doc(this.db, 'orders', date);
 
-    try {
-      const docSnapshot = await getDoc(docRef);
-
-      if (docSnapshot.exists()) {
-        const data = docSnapshot.data();
-
-        return data[creatorId] as Order[];
-      } else {
-        return [];
-      }
-    } catch (error) {
-      console.error('Error retrieving orders:', error);
-      throw error;
-    }
+    return onSnapshot(doc(this.db, 'orders', date), callback);
   }
 
   async retrieveOrders(date: string) {

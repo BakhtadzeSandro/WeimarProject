@@ -21,6 +21,9 @@ import { formatDateToDocName } from '../../utils/date.utils';
   providers: [OrderService],
 })
 export class OrdersSummaryComponent implements OnInit {
+  // TODO: show creators account number
+  // TODO: allow user to provide multiple banks account number or personal number
+
   private orderService = inject(OrderService);
   private userService = inject(UsersService);
   private authService = inject(AuthService);
@@ -109,22 +112,21 @@ export class OrdersSummaryComponent implements OnInit {
     await this.getOrderCreator();
 
     if (date) {
-      this.orderService
-        .retrieveOrdersPerUser(
-          formatDateToDocName(date),
-          this.orderCreator?.id ?? ''
-        )
-        .then((orders) => {
-          this.allOrdersLength = orders?.length;
-          this._originalOrders = orders;
-          this.orders = this.groupOrders(orders ?? []);
-        });
+      this.orderService.retrieveOrdersPerUser(
+        formatDateToDocName(date),
+        (doc) => {
+          const data = doc.data();
+          if (data) {
+            this._originalOrders = data[this.orderCreator?.id ?? ''] as Order[];
+            this.allOrdersLength = this._originalOrders?.length;
+            this.orders = this.groupOrders(this._originalOrders ?? []);
+          }
+        }
+      );
     }
   }
 
   async getOrderCreator() {
-    // TODO: update orders in real time
-    // ** https://firebase.google.com/docs/firestore/query-data/listen
     const orderCreatorId = this.activatedRoute.snapshot.params['creatorId'];
 
     await this.userService.getUserWithId(orderCreatorId ?? '').then((val) => {
