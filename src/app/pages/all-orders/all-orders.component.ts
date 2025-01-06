@@ -1,14 +1,12 @@
 import { Component, inject, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { DatePickerModule } from 'primeng/datepicker';
 import { of } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
-import { DatePickerModule } from 'primeng/datepicker';
-import { FirestoreUser } from '../../models/user.model';
-import { AuthService } from '../../services/auth.service';
-import { OrderService } from '../../services/order.service';
-import { UsersService } from '../../services/users.service';
+import { FirestoreUser } from '../../models/index';
+import { AuthService, OrderService, UsersService } from '../../services/index';
 import { formatDateToDocName } from '../../utils/date.utils';
-import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-all-orders',

@@ -3,12 +3,9 @@ import { Component, inject, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { isEqual } from 'lodash';
 import { of, switchMap } from 'rxjs';
-import { OrderCardComponent } from '../../components/order-card/order-card.component';
-import { GroupedOrders, Order } from '../../models/order.model';
-import { FirestoreUser } from '../../models/user.model';
-import { AuthService } from '../../services/auth.service';
-import { OrderService } from '../../services/order.service';
-import { UsersService } from '../../services/users.service';
+import { OrderCardComponent } from '../../components/index';
+import { GroupedOrders, Order, FirestoreUser } from '../../models/index';
+import { AuthService, OrderService, UsersService } from '../../services/index';
 import { formatDateToDocName } from '../../utils/date.utils';
 
 @Component({

@@ -14,15 +14,15 @@ import {
 
 import { initializeApp } from '@angular/fire/app';
 import { Router } from '@angular/router';
+import { DocumentData, DocumentSnapshot } from 'firebase/firestore';
 import { firebaseConfig } from '../../../environment';
 import {
   Ingredient,
   IngredientAdjustment,
   Order,
   productInfo,
-} from '../models/order.model';
+} from '../models/index';
 import { formatDateToDocName } from '../utils/date.utils';
-import { DocumentData, DocumentSnapshot } from 'firebase/firestore';
 
 @Injectable({
   providedIn: 'root',

@@ -16,18 +16,17 @@ import { Select } from 'primeng/select';
 import { TextareaModule } from 'primeng/textarea';
 import { Toast } from 'primeng/toast';
 import { switchMap, tap } from 'rxjs';
-import { PreviousOrderModalComponent } from '../../components/previous-order-modal/previous-order-modal.component';
-import { MultiselectOption, OrderForm } from '../../models/forms.model';
+import { PreviousOrderModalComponent } from '../../components/index';
 import {
+  MultiselectOption,
+  OrderForm,
   Ingredient,
   IngredientAdjustment,
   Order,
   productInfo,
-} from '../../models/order.model';
-import { FirestoreUser } from '../../models/user.model';
-import { AuthService } from '../../services/auth.service';
-import { OrderService } from '../../services/order.service';
-import { UsersService } from '../../services/users.service';
+  FirestoreUser,
+} from '../../models/index';
+import { AuthService, OrderService, UsersService } from '../../services/index';
 
 @Component({
   selector: 'app-order',
