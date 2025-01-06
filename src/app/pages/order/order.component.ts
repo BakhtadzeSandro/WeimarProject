@@ -342,6 +342,10 @@ export class OrderComponent implements OnInit {
     });
   }
 
+  get firstName(): string {
+    return this.orderCreator?.name?.split(' ')[0] ?? 'Levancho';
+  }
+
   ngOnInit() {
     this.listenToWithEverythingControl();
     this.checkPreviousOrder();
