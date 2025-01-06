@@ -1,17 +1,18 @@
 import { inject, Injectable } from '@angular/core';
 import {
-  Firestore,
+  arrayUnion,
   collection,
+  doc,
+  Firestore,
+  getDoc,
   getDocs,
   getFirestore,
-  doc,
-  updateDoc,
-  arrayUnion,
-  getDoc,
   setDoc,
+  updateDoc,
 } from '@angular/fire/firestore';
 
 import { initializeApp } from '@angular/fire/app';
+import { Router } from '@angular/router';
 import { firebaseConfig } from '../../../environment';
 import {
   Ingredient,
@@ -19,7 +20,6 @@ import {
   Order,
   productInfo,
 } from '../models/order.model';
-import { Router } from '@angular/router';
 import { formatDateToDocName } from '../utils/date.utils';
 
 @Injectable({
@@ -107,9 +107,21 @@ export class OrderService {
     try {
       const docSnapshot = await getDoc(docRef);
 
+      const orders = docSnapshot.data() ? docSnapshot.data()![creatorId] : [];
+      let newOrders: Order[] = [];
+
+      if (orders.length > 0) {
+        newOrders = orders.map((o: Order) => {
+          if (o.orderedBy === order.orderedBy) {
+            return order;
+          }
+          return o;
+        });
+      }
+
       if (docSnapshot.exists()) {
         await updateDoc(docRef, {
-          [creatorId]: arrayUnion(order),
+          [creatorId]: newOrders.length === 0 ? arrayUnion(order) : newOrders,
         });
       } else {
         await setDoc(docRef, {
