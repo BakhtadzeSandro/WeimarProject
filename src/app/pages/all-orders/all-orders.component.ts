@@ -2,16 +2,18 @@ import { Component, inject, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { of } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
+import { DatePickerModule } from 'primeng/datepicker';
 import { FirestoreUser } from '../../models/user.model';
 import { AuthService } from '../../services/auth.service';
 import { OrderService } from '../../services/order.service';
 import { UsersService } from '../../services/users.service';
 import { formatDateToDocName } from '../../utils/date.utils';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-all-orders',
   standalone: true,
-  imports: [],
+  imports: [DatePickerModule, FormsModule],
   templateUrl: './all-orders.component.html',
   styleUrl: './all-orders.component.scss',
   providers: [],
@@ -23,8 +25,13 @@ export class AllOrdersComponent implements OnInit {
   private router = inject(Router);
   orderCreators: FirestoreUser[] = [];
   orderCreatorsIds: string[] | undefined;
+  selectedDate: Date | undefined;
 
   constructor() {}
+
+  retrieveOrdersForSpecificDate() {
+    this.getCreators(this.selectedDate);
+  }
 
   clickOrderGroup(orderCreator: FirestoreUser) {
     localStorage.setItem('orderCreator', JSON.stringify(orderCreator));
@@ -61,7 +68,7 @@ export class AllOrdersComponent implements OnInit {
       const creators = await Promise.all(creatorPromises);
 
       this.orderCreators = creators.filter(
-        (creator) => creator !== undefined || creator !== null
+        (creator) => creator !== undefined && creator !== null
       ) as FirestoreUser[];
     } catch (error) {
       console.error('Error retrieving creators:', error);

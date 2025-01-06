@@ -1,17 +1,15 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { isEqual } from 'lodash';
-import { DatePickerModule } from 'primeng/datepicker';
+import { of, switchMap } from 'rxjs';
+import { LeaveButtonComponent } from '../../components/leave-button/leave-button.component';
 import { OrderCardComponent } from '../../components/order-card/order-card.component';
 import { GroupedOrders, Order } from '../../models/order.model';
 import { FirestoreUser } from '../../models/user.model';
+import { AuthService } from '../../services/auth.service';
 import { OrderService } from '../../services/order.service';
 import { UsersService } from '../../services/users.service';
-import { LeaveButtonComponent } from '../../components/leave-button/leave-button.component';
-import { AuthService } from '../../services/auth.service';
-import { of, switchMap } from 'rxjs';
 import { formatDateToDocName } from '../../utils/date.utils';
 
 @Component({
@@ -19,13 +17,7 @@ import { formatDateToDocName } from '../../utils/date.utils';
   templateUrl: './orders-summary.component.html',
   styleUrls: ['./orders-summary.component.scss'],
   standalone: true,
-  imports: [
-    OrderCardComponent,
-    CommonModule,
-    DatePickerModule,
-    FormsModule,
-    LeaveButtonComponent,
-  ],
+  imports: [OrderCardComponent, CommonModule, LeaveButtonComponent],
   providers: [OrderService],
 })
 export class OrdersSummaryComponent implements OnInit {
@@ -83,10 +75,6 @@ export class OrdersSummaryComponent implements OnInit {
         })
       )
       .subscribe(() => this.router.navigate(['/all-orders']));
-  }
-
-  retrieveOrdersForSpecificDate() {
-    this.getOrders(this.selectedDate);
   }
 
   groupOrders(orders: Order[]): GroupedOrders[] {
