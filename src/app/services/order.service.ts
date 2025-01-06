@@ -20,6 +20,7 @@ import {
   productInfo,
 } from '../models/order.model';
 import { Router } from '@angular/router';
+import { formatDateToDocName } from '../utils/date.utils';
 
 @Injectable({
   providedIn: 'root',
@@ -73,12 +74,7 @@ export class OrderService {
   }
 
   async createNewGroup(creatorId: string) {
-    const today = new Date();
-    const formattedDate = `${
-      today.getMonth() + 1
-    }-${today.getDate()}-${today.getFullYear()}`;
-
-    const docRef = doc(this.db, 'orders', formattedDate);
+    const docRef = doc(this.db, 'orders', formatDateToDocName());
 
     try {
       const docSnapshot = await getDoc(docRef);
@@ -106,12 +102,7 @@ export class OrderService {
   }
 
   async submitOrder(order: Order, creatorId: string) {
-    const today = new Date();
-    const formattedDate = `${
-      today.getMonth() + 1
-    }-${today.getDate()}-${today.getFullYear()}`;
-
-    const docRef = doc(this.db, 'orders', formattedDate);
+    const docRef = doc(this.db, 'orders', formatDateToDocName());
 
     try {
       const docSnapshot = await getDoc(docRef);
@@ -172,12 +163,7 @@ export class OrderService {
   }
 
   leaveGroup(creatorId: string, updatedOrders: Order[]) {
-    const today = new Date();
-    const formattedDate = `${
-      today.getMonth() + 1
-    }-${today.getDate()}-${today.getFullYear()}`;
-
-    return updateDoc(doc(this.db, 'orders', formattedDate), {
+    return updateDoc(doc(this.db, 'orders', formatDateToDocName()), {
       [creatorId]: updatedOrders,
     });
   }

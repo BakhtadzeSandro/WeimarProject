@@ -12,6 +12,7 @@ import { UsersService } from '../../services/users.service';
 import { LeaveButtonComponent } from '../../components/leave-button/leave-button.component';
 import { AuthService } from '../../services/auth.service';
 import { of, switchMap } from 'rxjs';
+import { formatDateToDocName } from '../../utils/date.utils';
 
 @Component({
   selector: 'app-orders-summary',
@@ -120,11 +121,11 @@ export class OrdersSummaryComponent implements OnInit {
     await this.getOrderCreator();
 
     if (date) {
-      const formattedDate = `${
-        date.getMonth() + 1
-      }-${date.getDate()}-${date.getFullYear()}`;
       this.orderService
-        .retrieveOrdersPerUser(formattedDate, this.orderCreator?.id ?? '')
+        .retrieveOrdersPerUser(
+          formatDateToDocName(date),
+          this.orderCreator?.id ?? ''
+        )
         .then((orders) => {
           this.allOrdersLength = orders?.length;
           this._originalOrders = orders;
