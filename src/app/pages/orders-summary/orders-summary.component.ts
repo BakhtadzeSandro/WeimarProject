@@ -108,7 +108,7 @@ export class OrdersSummaryComponent implements OnInit {
     await this.getOrderCreator();
 
     if (date) {
-      this.orderService.retrieveOrdersPerUser(
+      this.orderService.listenToOrderUpdates(
         formatDateToDocName(date),
         (doc) => {
           const data = doc.data();

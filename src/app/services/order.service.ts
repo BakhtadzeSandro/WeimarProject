@@ -139,13 +139,30 @@ export class OrderService {
     }
   }
 
-  async retrieveOrdersPerUser(
+  listenToOrderUpdates(
     date: string,
     callback: (doc: DocumentSnapshot<DocumentData>) => void
   ) {
+    return onSnapshot(doc(this.db, 'orders', date), callback);
+  }
+
+  async retrieveOrdersPerUser(date: string, creatorId: string) {
     const docRef = doc(this.db, 'orders', date);
 
-    return onSnapshot(doc(this.db, 'orders', date), callback);
+    try {
+      const docSnapshot = await getDoc(docRef);
+
+      if (docSnapshot.exists()) {
+        const data = docSnapshot.data();
+
+        return data[creatorId] as Order[];
+      } else {
+        return [];
+      }
+    } catch (error) {
+      console.error('Error retrieving orders:', error);
+      throw error;
+    }
   }
 
   async retrieveOrders(date: string) {
