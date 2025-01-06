@@ -52,22 +52,23 @@ export class AllOrdersComponent implements OnInit {
     if (!date) return;
 
     try {
-      const orders = await this.orderService.retrieveOrders(
-        formatDateToDocName(date)
+      this.orderService.listenToOrderUpdates(
+        formatDateToDocName(date),
+        async (doc) => {
+          if (doc.exists()) {
+            this.orderCreatorsIds = Object.keys(doc.data());
+
+            const creatorPromises = this.orderCreatorsIds.map((id) =>
+              this.userService.getUserWithId(id)
+            );
+            const creators = await Promise.all(creatorPromises);
+
+            this.orderCreators = creators.filter(
+              (creator) => creator !== undefined && creator !== null
+            ) as FirestoreUser[];
+          }
+        }
       );
-
-      if (!orders) return;
-
-      this.orderCreatorsIds = Object.keys(orders);
-
-      const creatorPromises = this.orderCreatorsIds.map((id) =>
-        this.userService.getUserWithId(id)
-      );
-      const creators = await Promise.all(creatorPromises);
-
-      this.orderCreators = creators.filter(
-        (creator) => creator !== undefined && creator !== null
-      ) as FirestoreUser[];
     } catch (error) {
       console.error('Error retrieving creators:', error);
     }
