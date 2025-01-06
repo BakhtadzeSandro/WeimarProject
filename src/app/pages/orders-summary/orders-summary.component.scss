@@ -5,8 +5,12 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  .back-to-orders {
+
+  .actions {
     margin-bottom: 10px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
   }
 
   .back-link {
@@ -23,6 +27,7 @@
     color: #0056b3;
     transform: translateY(-2px);
   }
+
   .check-last-orders-text {
     color: rgb(133, 99, 99);
     font-size: 18px;

@@ -28,6 +28,7 @@ import { FirestoreUser } from '../../models/user.model';
 import { AuthService } from '../../services/auth.service';
 import { OrderService } from '../../services/order.service';
 import { UsersService } from '../../services/users.service';
+import { LeaveButtonComponent } from '../../components/leave-button/leave-button.component';
 
 @Component({
   selector: 'app-order',
@@ -44,6 +45,7 @@ import { UsersService } from '../../services/users.service';
     ButtonModule,
     Select,
     Toast,
+    LeaveButtonComponent,
   ],
   providers: [ToastrService, DialogService],
 })
@@ -72,6 +74,10 @@ export class OrderComponent implements OnInit {
 
   navigateToOrdersList() {
     this.router.navigate([`order/${this.orderCreator?.id}/summary`]);
+  }
+
+  leaveGroup() {
+    this.router.navigate(['/all-orders']);
   }
 
   showPreviousOrder() {
@@ -334,6 +340,10 @@ export class OrderComponent implements OnInit {
         this.orderCreator = val;
       }
     });
+  }
+
+  get firstName(): string {
+    return this.orderCreator?.name?.split(' ')[0] ?? 'Levancho';
   }
 
   ngOnInit() {

@@ -6,6 +6,7 @@ import { FirestoreUser } from '../../models/user.model';
 import { AuthService } from '../../services/auth.service';
 import { OrderService } from '../../services/order.service';
 import { UsersService } from '../../services/users.service';
+import { formatDateToDocName } from '../../utils/date.utils';
 
 @Component({
   selector: 'app-all-orders',
@@ -45,11 +46,10 @@ export class AllOrdersComponent implements OnInit {
   async getCreators(date: Date | undefined) {
     if (!date) return;
 
-    const formattedDate = `${
-      date.getMonth() + 1
-    }-${date.getDate()}-${date.getFullYear()}`;
     try {
-      const orders = await this.orderService.retrieveOrders(formattedDate);
+      const orders = await this.orderService.retrieveOrders(
+        formatDateToDocName(date)
+      );
 
       if (!orders) return;
 

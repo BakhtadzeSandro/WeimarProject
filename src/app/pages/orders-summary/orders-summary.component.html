@@ -1,6 +1,7 @@
 <div class="check-last-orders">
-  <div class="back-to-orders">
+  <div class="actions">
     <div class="back-link" (click)="backToOrderPage()">Back to Order Page</div>
+    <app-leave-button (leaveGroup)="leaveGroup()"></app-leave-button>
   </div>
   <div class="check-last-orders-text mt-3">Check Last Orders</div>
   <p-datepicker

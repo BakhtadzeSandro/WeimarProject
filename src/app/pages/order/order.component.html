@@ -82,7 +82,7 @@
     }
     <div class="button-box mt-3">
       <button pButton (click)="submitOrder()" type="button" class="submit-btn">
-        Send to Levancho
+        Send to {{ firstName }}
       </button>
       <button
         pButton
@@ -92,6 +92,7 @@
       >
         See orders
       </button>
+      <app-leave-button (leaveGroup)="leaveGroup()"></app-leave-button>
     </div>
   </div>
 </div>
