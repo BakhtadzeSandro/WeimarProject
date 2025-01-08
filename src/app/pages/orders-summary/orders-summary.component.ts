@@ -1,17 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { isEqual } from 'lodash';
-import { DatePickerModule } from 'primeng/datepicker';
-import { OrderCardComponent } from '../../components/order-card/order-card.component';
-import { GroupedOrders, Order } from '../../models/order.model';
-import { FirestoreUser } from '../../models/user.model';
-import { OrderService } from '../../services/order.service';
-import { UsersService } from '../../services/users.service';
-import { LeaveButtonComponent } from '../../components/leave-button/leave-button.component';
-import { AuthService } from '../../services/auth.service';
 import { of, switchMap } from 'rxjs';
+import { OrderCardComponent } from '../../components/index';
+import { GroupedOrders, Order, FirestoreUser } from '../../models/index';
+import { AuthService, OrderService, UsersService } from '../../services/index';
 import { formatDateToDocName } from '../../utils/date.utils';
 
 @Component({
@@ -19,16 +13,13 @@ import { formatDateToDocName } from '../../utils/date.utils';
   templateUrl: './orders-summary.component.html',
   styleUrls: ['./orders-summary.component.scss'],
   standalone: true,
-  imports: [
-    OrderCardComponent,
-    CommonModule,
-    DatePickerModule,
-    FormsModule,
-    LeaveButtonComponent,
-  ],
+  imports: [OrderCardComponent, CommonModule],
   providers: [OrderService],
 })
 export class OrdersSummaryComponent implements OnInit {
+  // TODO: show creators account number
+  // TODO: allow user to provide multiple banks account number or personal number
+
   private orderService = inject(OrderService);
   private userService = inject(UsersService);
   private authService = inject(AuthService);
@@ -85,10 +76,6 @@ export class OrdersSummaryComponent implements OnInit {
       .subscribe(() => this.router.navigate(['/all-orders']));
   }
 
-  retrieveOrdersForSpecificDate() {
-    this.getOrders(this.selectedDate);
-  }
-
   groupOrders(orders: Order[]): GroupedOrders[] {
     const groupedOrders: GroupedOrders[] = [];
 
@@ -121,22 +108,21 @@ export class OrdersSummaryComponent implements OnInit {
     await this.getOrderCreator();
 
     if (date) {
-      this.orderService
-        .retrieveOrdersPerUser(
-          formatDateToDocName(date),
-          this.orderCreator?.id ?? ''
-        )
-        .then((orders) => {
-          this.allOrdersLength = orders?.length;
-          this._originalOrders = orders;
-          this.orders = this.groupOrders(orders ?? []);
-        });
+      this.orderService.listenToOrderUpdates(
+        formatDateToDocName(date),
+        (doc) => {
+          const data = doc.data();
+          if (data) {
+            this._originalOrders = data[this.orderCreator?.id ?? ''] as Order[];
+            this.allOrdersLength = this._originalOrders?.length;
+            this.orders = this.groupOrders(this._originalOrders ?? []);
+          }
+        }
+      );
     }
   }
 
   async getOrderCreator() {
-    // TODO: update orders in real time
-    // ** https://firebase.google.com/docs/firestore/query-data/listen
     const orderCreatorId = this.activatedRoute.snapshot.params['creatorId'];
 
     await this.userService.getUserWithId(orderCreatorId ?? '').then((val) => {

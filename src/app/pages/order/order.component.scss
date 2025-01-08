@@ -10,6 +10,22 @@
 
   min-height: 70vh;
 
+  .leave-group-btn {
+    background-color: #dc3545;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+  }
+
+  .leave-group-btn:hover {
+    background-color: #c82333;
+  }
+
   .title {
     flex: 0.3;
     font-size: 24px;

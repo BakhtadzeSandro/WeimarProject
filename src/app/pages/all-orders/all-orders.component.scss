@@ -76,3 +76,16 @@
   font-weight: bold;
   color: #333;
 }
+
+.search-bar {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.check-last-orders-text {
+  color: rgb(133, 99, 99);
+  font-size: 18px;
+  font-weight: bold;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}

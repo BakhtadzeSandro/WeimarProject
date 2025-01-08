@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { DynamicDialogConfig } from 'primeng/dynamicdialog';
-import { Order } from '../../models/order.model';
+import { Order } from '../../models/index';
 
 export interface PreviousOrderDialogData {
   previousOrder: Order;

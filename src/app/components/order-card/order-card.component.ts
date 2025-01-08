@@ -6,7 +6,7 @@ import {
   OnInit,
 } from '@angular/core';
 import { TooltipModule } from 'primeng/tooltip';
-import { GroupedOrders } from '../../models/order.model';
+import { GroupedOrders } from '../../models/index';
 
 @Component({
   selector: 'app-order-card',
