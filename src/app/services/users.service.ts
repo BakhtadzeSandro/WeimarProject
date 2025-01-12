@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
-import { getFirestore, doc, getDoc } from '@angular/fire/firestore';
-import { FirestoreUser } from '../models/user.model';
 import { initializeApp } from '@angular/fire/app';
-import { firebaseConfig } from '../../../environment';
+import { doc, getDoc, getFirestore } from '@angular/fire/firestore';
 import { DocumentData, DocumentReference } from 'firebase/firestore';
+import { firebaseConfig } from '../../../environment';
+import { FirestoreUser } from '../models/index';
 
 @Injectable({
   providedIn: 'root',

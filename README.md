@@ -1,27 +1,46 @@
 # WeimarProject
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 17.3.9.
+WeimarProject is a web application designed to help people, especially workers of Omedia, to order Shawarma together from Weimar. The application allows users to create groups, order together, view their previous orders, get real-time updates about each group and its participants, and see groups by date.
 
-## Development server
+## Features
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+- Create groups and order Shawarma together.
+- View previous orders from the device.
+- Get real-time updates about each group and its participants.
+- View groups by date.
 
-## Code scaffolding
+## Installation
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+To install and run the project locally, follow these steps:
 
-## Build
+1. Clone the repository:
+   ```
+   git clone https://github.com/levant12/WeimarProject.git
+   ```
+2. Navigate to the project directory:
+   ```
+   cd WeimarProject
+   ```
+3. Install the dependencies:
+   ```
+   npm install
+   ```
+4. Start the project:
+   ```
+   npm start
+   ```
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+The application will be running on `localhost:4200`.
 
-## Running unit tests
+## Contributors
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+- [BakhtadzeSandro](https://github.com/BakhtadzeSandro)
+- [levant12](https://github.com/levant12)
 
-## Running end-to-end tests
+## License
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+No license has been provided so far.
 
-## Further help
+---
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+Feel free to add any additional information or sections as needed.

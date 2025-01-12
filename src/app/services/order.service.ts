@@ -1,25 +1,28 @@
 import { inject, Injectable } from '@angular/core';
 import {
-  Firestore,
+  arrayUnion,
   collection,
+  doc,
+  Firestore,
+  getDoc,
   getDocs,
   getFirestore,
-  doc,
-  updateDoc,
-  arrayUnion,
-  getDoc,
+  onSnapshot,
   setDoc,
+  updateDoc,
 } from '@angular/fire/firestore';
 
 import { initializeApp } from '@angular/fire/app';
+import { Router } from '@angular/router';
+import { DocumentData, DocumentSnapshot } from 'firebase/firestore';
 import { firebaseConfig } from '../../../environment';
 import {
   Ingredient,
   IngredientAdjustment,
   Order,
   productInfo,
-} from '../models/order.model';
-import { Router } from '@angular/router';
+} from '../models/index';
+import { formatDateToDocName } from '../utils/date.utils';
 
 @Injectable({
   providedIn: 'root',
@@ -73,12 +76,7 @@ export class OrderService {
   }
 
   async createNewGroup(creatorId: string) {
-    const today = new Date();
-    const formattedDate = `${
-      today.getMonth() + 1
-    }-${today.getDate()}-${today.getFullYear()}`;
-
-    const docRef = doc(this.db, 'orders', formattedDate);
+    const docRef = doc(this.db, 'orders', formatDateToDocName());
 
     try {
       const docSnapshot = await getDoc(docRef);
@@ -106,19 +104,28 @@ export class OrderService {
   }
 
   async submitOrder(order: Order, creatorId: string) {
-    const today = new Date();
-    const formattedDate = `${
-      today.getMonth() + 1
-    }-${today.getDate()}-${today.getFullYear()}`;
-
-    const docRef = doc(this.db, 'orders', formattedDate);
+    const docRef = doc(this.db, 'orders', formatDateToDocName());
 
     try {
       const docSnapshot = await getDoc(docRef);
 
+      const orders = docSnapshot.data() ? docSnapshot.data()![creatorId] : [];
+      let finalOrders: Order[] = [];
+      let newOrder: boolean = false;
+
+      if (orders.length > 0) {
+        finalOrders = orders.map((o: Order) => {
+          if (o.orderedBy === order.orderedBy) {
+            newOrder = true;
+            return order;
+          }
+          return o;
+        });
+      }
+
       if (docSnapshot.exists()) {
         await updateDoc(docRef, {
-          [creatorId]: arrayUnion(order),
+          [creatorId]: newOrder ? finalOrders : arrayUnion(order),
         });
       } else {
         await setDoc(docRef, {
@@ -130,6 +137,13 @@ export class OrderService {
     } catch (error) {
       console.error('Error submitting order:', error);
     }
+  }
+
+  listenToOrderUpdates(
+    date: string,
+    callback: (doc: DocumentSnapshot<DocumentData>) => void
+  ) {
+    return onSnapshot(doc(this.db, 'orders', date), callback);
   }
 
   async retrieveOrdersPerUser(date: string, creatorId: string) {
@@ -169,5 +183,11 @@ export class OrderService {
       console.error('Error retrieving orders:', error);
       throw error;
     }
+  }
+
+  leaveGroup(creatorId: string, updatedOrders: Order[]) {
+    return updateDoc(doc(this.db, 'orders', formatDateToDocName()), {
+      [creatorId]: updatedOrders,
+    });
   }
 }

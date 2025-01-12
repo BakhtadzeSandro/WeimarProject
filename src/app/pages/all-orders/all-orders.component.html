@@ -1,5 +1,16 @@
 <div class="order-groups-container">
-  <h1>Order Groups</h1>
+  <div class="search-bar">
+    <div class="check-last-orders-text mt-3">Check Last Orders</div>
+    <p-datepicker
+      class="mt-3"
+      [(ngModel)]="selectedDate"
+      [showIcon]="true"
+      [showOnFocus]="true"
+      [readonlyInput]="true"
+      (ngModelChange)="retrieveOrdersForSpecificDate()"
+    />
+  </div>
+  <h1 class="mt-3">Order Groups</h1>
   <div class="order-groups">
     @for(creator of orderCreators; track $index) {
     <div class="order-group" (click)="clickOrderGroup(creator)">

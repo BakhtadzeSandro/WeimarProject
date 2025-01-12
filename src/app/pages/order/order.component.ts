@@ -15,19 +15,19 @@ import { RadioButton } from 'primeng/radiobutton';
 import { Select } from 'primeng/select';
 import { TextareaModule } from 'primeng/textarea';
 import { Toast } from 'primeng/toast';
-import { switchMap, tap } from 'rxjs';
-import { PreviousOrderModalComponent } from '../../components/previous-order-modal/previous-order-modal.component';
-import { MultiselectOption, OrderForm } from '../../models/forms.model';
+import { of, switchMap, tap } from 'rxjs';
+import { PreviousOrderModalComponent } from '../../components/index';
 import {
+  MultiselectOption,
+  OrderForm,
   Ingredient,
   IngredientAdjustment,
   Order,
   productInfo,
-} from '../../models/order.model';
-import { FirestoreUser } from '../../models/user.model';
-import { AuthService } from '../../services/auth.service';
-import { OrderService } from '../../services/order.service';
-import { UsersService } from '../../services/users.service';
+  FirestoreUser,
+} from '../../models/index';
+import { AuthService, OrderService, UsersService } from '../../services/index';
+import { formatDateToDocName } from '../../utils/date.utils';
 
 @Component({
   selector: 'app-order',
@@ -72,6 +72,33 @@ export class OrderComponent implements OnInit {
 
   navigateToOrdersList() {
     this.router.navigate([`order/${this.orderCreator?.id}/summary`]);
+  }
+
+  async leaveGroup() {
+    const originalOrders: Order[] =
+      await this.orderService.retrieveOrdersPerUser(
+        formatDateToDocName(new Date()),
+        this.orderCreator?.id ?? ''
+      );
+
+    this.authService
+      .getCurrentUser()
+      .pipe(
+        switchMap((user) => {
+          console.log(originalOrders);
+          const updatedOrders =
+            originalOrders?.filter(
+              (order) => order.orderedBy !== user?.displayName
+            ) ?? [];
+          this.orderService.leaveGroup(
+            this.orderCreator?.id ?? '',
+            updatedOrders
+          );
+
+          return of(user);
+        })
+      )
+      .subscribe(() => this.router.navigate(['/all-orders']));
   }
 
   showPreviousOrder() {
@@ -334,6 +361,10 @@ export class OrderComponent implements OnInit {
         this.orderCreator = val;
       }
     });
+  }
+
+  get firstName(): string {
+    return this.orderCreator?.name?.split(' ')[0] ?? 'Levancho';
   }
 
   ngOnInit() {

@@ -3,7 +3,7 @@
   justify-content: space-between;
   align-items: center;
   background-color: rgb(194, 243, 227);
-  padding: 10px 25px; /* Use padding instead of hardcoding height */
+  padding: 10px 25px;
   width: 100%;
 
   .left {
@@ -62,5 +62,25 @@
     &:active {
       transform: scale(0.95);
     }
+  }
+}
+
+.overlay {
+  background-color: rgb(224, 221, 221);
+  height: 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: fit-content;
+  position: relative;
+  left: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 15px;
+}
+
+@media (max-width: 768px) {
+  .container {
+    gap: 20px;
   }
 }

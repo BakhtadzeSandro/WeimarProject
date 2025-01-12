@@ -1,15 +1,15 @@
-import { Injectable, inject } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
+import { initializeApp } from '@angular/fire/app';
 import { Auth, signOut, user } from '@angular/fire/auth';
-import { from } from 'rxjs';
+import { doc, getFirestore, setDoc } from '@angular/fire/firestore';
+import { Router } from '@angular/router';
 import {
   browserPopupRedirectResolver,
   GoogleAuthProvider,
   signInWithPopup,
   User,
 } from 'firebase/auth';
-import { Router } from '@angular/router';
-import { getFirestore, doc, setDoc } from '@angular/fire/firestore';
-import { initializeApp } from '@angular/fire/app';
+import { from } from 'rxjs';
 import { firebaseConfig } from '../../../environment';
 
 @Injectable({
@@ -43,7 +43,7 @@ export class AuthService {
 
         // const token = credential?.accessToken;
         // const user = result.user;
-        this.router.navigate(['all-order']);
+        this.router.navigate(['all-orders']);
       })
       .catch((error) => {
         console.log(error);
