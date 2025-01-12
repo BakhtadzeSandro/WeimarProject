@@ -10,7 +10,7 @@
       (ngModelChange)="retrieveOrdersForSpecificDate()"
     />
   </div>
-  <h1>Order Groups</h1>
+  <h1 class="mt-3">Order Groups</h1>
   <div class="order-groups">
     @for(creator of orderCreators; track $index) {
     <div class="order-group" (click)="clickOrderGroup(creator)">

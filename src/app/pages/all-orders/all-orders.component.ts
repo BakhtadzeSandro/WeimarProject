@@ -32,8 +32,15 @@ export class AllOrdersComponent implements OnInit {
   }
 
   clickOrderGroup(orderCreator: FirestoreUser) {
-    localStorage.setItem('orderCreator', JSON.stringify(orderCreator));
-    this.router.navigate(['order/' + orderCreator.id]);
+    if (
+      typeof this.selectedDate === 'undefined' ||
+      this.selectedDate?.getDate() === new Date().getDate()
+    ) {
+      this.router.navigate(['order/' + orderCreator.id]);
+      return;
+    }
+
+    this.router.navigate(['order/' + orderCreator.id + '/summary']);
   }
 
   createNewGroup() {
