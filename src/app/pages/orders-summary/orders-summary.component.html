@@ -1,7 +1,10 @@
 <div class="check-last-orders">
   <div class="actions">
+    @if(selectedDate?.toDateString() === today.toDateString()){
     <div class="back-link" (click)="backToOrderPage()">Back to Order Page</div>
     <button class="leave-group-btn" (click)="leaveGroup()">Leave Group</button>
+    }
+    <div class="back-link" (click)="backToHomePage()">Back to Home Page</div>
   </div>
 </div>
 <div class="container">

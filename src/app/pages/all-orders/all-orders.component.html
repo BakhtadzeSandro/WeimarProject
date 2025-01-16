@@ -1,15 +1,48 @@
 <div class="order-groups-container">
-  <div class="search-bar">
-    <div class="check-last-orders-text mt-3">Check Last Orders</div>
-    <p-datepicker
-      class="mt-3"
-      [(ngModel)]="selectedDate"
-      [showIcon]="true"
-      [showOnFocus]="true"
-      [readonlyInput]="true"
-      (ngModelChange)="retrieveOrdersForSpecificDate()"
-    />
-  </div>
+  <p-sidebar [(visible)]="sidebarDisplayed" [dismissible]="false">
+    <div class="sidebar-content">
+      <h3>Previous Orders</h3>
+      @for (prevOrder of previousOrderIds; track $index) {
+      <div class="order-item">
+        <div class="order-header" (click)="toggleOrderDetails(prevOrder)">
+          <p>{{ prevOrder }}</p>
+          <i
+            class="pi"
+            [ngClass]="{
+              'pi-angle-down': !isOrderDetailsVisible(prevOrder),
+              'pi-angle-up': isOrderDetailsVisible(prevOrder)
+            }"
+          ></i>
+        </div>
+        @if(isOrderDetailsVisible(prevOrder)){
+        <div class="order-details">
+          @if(previousGroupCreators){ @for(creator of
+          previousGroupCreators[prevOrder]; track $index){
+          <p class="group-name" (click)="clickOrderGroup(creator, prevOrder)">
+            {{ creator.name + "'s group" }}
+          </p>
+          } }
+        </div>
+        }
+      </div>
+      <p-divider />
+      } @if(hasMoreOrders){
+      <div class="load-more-container">
+        <p-button
+          label="Load More"
+          class="load-more-btn"
+          (click)="loadMoreOrders()"
+        ></p-button>
+      </div>
+      }
+    </div>
+  </p-sidebar>
+  <p-button
+    type="text"
+    (click)="displaySidebar()"
+    label="See previous orders"
+  ></p-button>
+
   <h1 class="mt-3">Order Groups</h1>
   <div class="order-groups">
     @for(creator of orderCreators; track $index) {

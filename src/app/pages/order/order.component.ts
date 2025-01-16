@@ -92,7 +92,8 @@ export class OrderComponent implements OnInit {
             ) ?? [];
           this.orderService.leaveGroup(
             this.orderCreator?.id ?? '',
-            updatedOrders
+            updatedOrders,
+            user?.uid === this.orderCreator?.id
           );
 
           return of(user);

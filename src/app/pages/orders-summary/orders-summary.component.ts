@@ -19,6 +19,7 @@ import { formatDateToDocName } from '../../utils/date.utils';
 export class OrdersSummaryComponent implements OnInit {
   // TODO: show creators account number
   // TODO: allow user to provide multiple banks account number or personal number
+  // TODO: show weimar number
 
   private orderService = inject(OrderService);
   private userService = inject(UsersService);
@@ -30,6 +31,8 @@ export class OrdersSummaryComponent implements OnInit {
   allOrdersLength: number | undefined;
 
   selectedDate: Date | undefined;
+
+  today = new Date();
 
   similarOrdersFromDifferentUsers: any[] | undefined = [];
 
@@ -56,6 +59,10 @@ export class OrdersSummaryComponent implements OnInit {
     this.router.navigate([`order/${this.orderCreator?.id}`]);
   }
 
+  backToHomePage() {
+    this.router.navigate(['/all-orders']);
+  }
+
   leaveGroup() {
     this.authService
       .getCurrentUser()
@@ -67,7 +74,8 @@ export class OrdersSummaryComponent implements OnInit {
             ) ?? [];
           this.orderService.leaveGroup(
             this.orderCreator?.id ?? '',
-            updatedOrders
+            updatedOrders,
+            user?.uid === this.orderCreator?.id
           );
 
           return of(user);
@@ -104,12 +112,12 @@ export class OrdersSummaryComponent implements OnInit {
     return groupedOrders;
   }
 
-  async getOrders(date: Date | undefined) {
+  async getOrders() {
     await this.getOrderCreator();
 
-    if (date) {
+    if (this.selectedDate) {
       this.orderService.listenToOrderUpdates(
-        formatDateToDocName(date),
+        formatDateToDocName(this.selectedDate),
         (doc) => {
           const data = doc.data();
           if (data) {
@@ -133,6 +141,11 @@ export class OrdersSummaryComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.getOrders(new Date());
+    this.activatedRoute.queryParams.subscribe((params) => {
+      this.selectedDate = params['date']
+        ? new Date(params['date'])
+        : new Date();
+      this.getOrders();
+    });
   }
 }
