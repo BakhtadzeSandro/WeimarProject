@@ -64,12 +64,19 @@ export class AllOrdersComponent implements OnInit {
           if (!val) return null;
           const user = await this.userService.getUserWithId(val.uid);
 
-          if (user?.accountNumber || user?.accountNumber === 0) {
-            this.showAccountNumberPop = true;
-            return null;
+          if (
+            user?.bogAccountNumber ||
+            user?.tbcAccountNumber ||
+            user?.personalNumber ||
+            user?.bogAccountNumber === '' ||
+            user?.tbcAccountNumber === '' ||
+            user?.personalNumber === 0
+          ) {
+            return val;
           }
 
-          return val;
+          this.showAccountNumberPop = true;
+          return null;
         }),
         switchMap((val) => {
           if (!val) return of(null);
@@ -108,6 +115,6 @@ export class AllOrdersComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.getCreators(new Date('1-5-2025'));
+    this.getCreators(new Date());
   }
 }

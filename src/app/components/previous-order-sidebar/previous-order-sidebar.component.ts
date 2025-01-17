@@ -62,7 +62,17 @@ export class PreviousOrderSidebarComponent implements OnInit, OnChanges {
     const { docs, lastDocId } =
       await this.orderService.retrieveOrdersForPagination();
 
-    this.previousOrderIds = docs.map((doc) => doc.id);
+    this.previousOrderIds = docs
+      .map((doc) => {
+        if (
+          Object.keys(doc.data()).filter((key) => key !== 'createdAt').length >
+          0
+        ) {
+          return doc.id;
+        }
+        return '';
+      })
+      .filter((id) => id !== '');
 
     docs.forEach(async (doc) => {
       this.previousOrders = {
@@ -125,7 +135,6 @@ export class PreviousOrderSidebarComponent implements OnInit, OnChanges {
   }
 
   onHide() {
-    console.log(this.sidebarDisplayed);
     this.sidebarVisibleChange.emit(this.sidebarDisplayed);
   }
 }

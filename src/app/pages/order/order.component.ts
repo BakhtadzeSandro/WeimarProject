@@ -85,7 +85,6 @@ export class OrderComponent implements OnInit {
       .getCurrentUser()
       .pipe(
         switchMap((user) => {
-          console.log(originalOrders);
           const updatedOrders =
             originalOrders?.filter(
               (order) => order.orderedBy !== user?.displayName

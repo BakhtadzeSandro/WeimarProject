@@ -11,6 +11,7 @@ import {
 } from 'firebase/auth';
 import { from } from 'rxjs';
 import { firebaseConfig } from '../../../environment';
+import { FirestoreUser } from '../models';
 
 @Injectable({
   providedIn: 'root',
@@ -38,8 +39,10 @@ export class AuthService {
           name: result.user.displayName,
           email: result.user.email,
           photoUrl: result.user.photoURL,
-          accountNumber: 0,
-        });
+          bogAccountNumber: null,
+          tbcAccountNumber: null,
+          personalNumber: null,
+        } as FirestoreUser);
 
         // const token = credential?.accessToken;
         // const user = result.user;
