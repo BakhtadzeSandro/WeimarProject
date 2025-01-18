@@ -11,6 +11,7 @@ import { CommonModule } from '@angular/common';
 import { PreviousOrderSidebarComponent } from '../../components/previous-order-sidebar/previous-order-sidebar.component';
 import { DialogModule } from 'primeng/dialog';
 import { AccountNumberPopUpComponent } from '../../components/account-number-pop-up/account-number-pop-up.component';
+import { or } from 'firebase/firestore';
 
 @Component({
   selector: 'app-all-orders',
@@ -46,8 +47,27 @@ export class AllOrdersComponent implements OnInit {
   constructor() {}
 
   clickOrderGroup(orderCreator: FirestoreUser) {
-    this.router.navigate(['order/' + orderCreator.id]);
-    return;
+    this.authService
+      .getCurrentUser()
+      .pipe(
+        switchMap(async (val) => {
+          if (!val) return of(null);
+
+          const orders = await this.orderService.retrieveOrdersPerUser(
+            formatDateToDocName(),
+            orderCreator.id
+          );
+
+          return orders.some((order) => order.photoUrl === val.photoURL);
+        })
+      )
+      .subscribe((isInOrder) => {
+        if (isInOrder) {
+          this.router.navigate(['order/' + orderCreator.id + '/summary']);
+          return;
+        }
+        this.router.navigate(['order/' + orderCreator.id]);
+      });
   }
 
   async displaySidebar() {
