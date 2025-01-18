@@ -38,6 +38,8 @@ export class OrdersSummaryComponent implements OnInit {
 
   orderCreator: FirestoreUser | undefined;
 
+  groupLeaverId: string | undefined;
+
   get orderPrice() {
     if (this._originalOrders) {
       return (
@@ -73,10 +75,13 @@ export class OrdersSummaryComponent implements OnInit {
       .getCurrentUser()
       .pipe(
         switchMap((user) => {
+          this.groupLeaverId = user?.uid;
+
           const updatedOrders =
             this._originalOrders?.filter(
               (order) => order.orderedBy !== user?.displayName
             ) ?? [];
+
           this.orderService.leaveGroup(
             this.orderCreator?.id ?? '',
             updatedOrders,
@@ -127,6 +132,12 @@ export class OrdersSummaryComponent implements OnInit {
           const data = doc.data();
           if (data) {
             this._originalOrders = data[this.orderCreator?.id ?? ''] as Order[];
+            if (!this._originalOrders) {
+              this.router.navigate(['/all-orders']);
+              this.groupLeaverId === this.orderCreator?.id
+                ? ''
+                : this.toastr.error('Order creator left the group');
+            }
             this.allOrdersLength = this._originalOrders?.length;
             this.orders = this.groupOrders(this._originalOrders ?? []);
           }
