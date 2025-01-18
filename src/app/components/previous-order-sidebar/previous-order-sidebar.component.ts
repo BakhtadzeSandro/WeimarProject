@@ -140,6 +140,7 @@ export class PreviousOrderSidebarComponent implements OnChanges {
   ngOnChanges() {
     this.sidebarDisplayed = this.sidebarVisible;
     if (this.sidebarVisible) {
+      this.hasMoreOrders = true;
       this.displaySidebar();
     }
   }
