@@ -3,8 +3,9 @@
     @if(selectedDate?.toDateString() === today.toDateString()){
     <div class="back-link" (click)="backToOrderPage()">Back to Order Page</div>
     <button class="leave-group-btn" (click)="leaveGroup()">Leave Group</button>
-    }
+    }@else{
     <div class="back-link" (click)="backToHomePage()">Back to Home Page</div>
+    }
   </div>
 </div>
 <div class="container">
@@ -27,6 +28,43 @@
     <div class="total-content">
       <h4>Total Price for Entire Order</h4>
       <p>{{ orderPrice }} GEL</p>
+      <h4 class="size mt-3">Send your share to {{ orderCreator?.name }}</h4>
+      @if(orderCreator?.bogAccountNumber) {
+      <span class="mt-3 flex flex-row">
+        <h4 class="mr-2">Bank of Georgia account number:</h4>
+        <p>{{ orderCreator?.bogAccountNumber }}</p>
+        <i
+          class="pi pi-clone"
+          (click)="copyToClipboard(orderCreator?.bogAccountNumber)"
+        ></i>
+      </span>
+      } @if(orderCreator?.tbcAccountNumber) {
+      <span class="mt-3 flex flex-row">
+        <h4 class="mr-2">TBC bank account number:</h4>
+        <p>{{ orderCreator?.tbcAccountNumber }}</p>
+        <i
+          class="pi pi-clone"
+          (click)="copyToClipboard(orderCreator?.tbcAccountNumber)"
+        ></i>
+      </span>
+      } @if(orderCreator?.personalNumber) {
+      <span class="mt-3 flex flex-row">
+        <h4 class="mr-2">Personal number:</h4>
+        <p>{{ orderCreator?.personalNumber }}</p>
+        <i
+          class="pi pi-clone ml-2"
+          (click)="copyToClipboard(orderCreator?.personalNumber)"
+        ></i>
+      </span>
+      }
+      <span class="mt-3 flex flex-row">
+        <h4 class="mr-2">Weimar contact info:</h4>
+        <p>511 16 16 35</p>
+        <i
+          class="pi pi-clone ml-2"
+          (click)="copyToClipboard('511 16 16 35')"
+        ></i>
+      </span>
     </div>
   </div>
   }

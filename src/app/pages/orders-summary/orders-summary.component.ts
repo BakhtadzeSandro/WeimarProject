@@ -2,9 +2,10 @@ import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { isEqual } from 'lodash';
+import { ToastrService } from 'ngx-toastr';
 import { of, switchMap } from 'rxjs';
 import { OrderCardComponent } from '../../components/index';
-import { GroupedOrders, Order, FirestoreUser } from '../../models/index';
+import { FirestoreUser, GroupedOrders, Order } from '../../models/index';
 import { AuthService, OrderService, UsersService } from '../../services/index';
 import { formatDateToDocName } from '../../utils/date.utils';
 
@@ -14,16 +15,15 @@ import { formatDateToDocName } from '../../utils/date.utils';
   styleUrls: ['./orders-summary.component.scss'],
   standalone: true,
   imports: [OrderCardComponent, CommonModule],
-  providers: [OrderService],
+  providers: [OrderService, ToastrService],
 })
 export class OrdersSummaryComponent implements OnInit {
-  // TODO: show creators account number
-  // TODO: allow user to provide multiple banks account number or personal number
   // TODO: show weimar number
 
   private orderService = inject(OrderService);
   private userService = inject(UsersService);
   private authService = inject(AuthService);
+  private toastr = inject(ToastrService);
   private router = inject(Router);
   private _originalOrders: Order[] | undefined;
   private activatedRoute = inject(ActivatedRoute);
@@ -61,6 +61,13 @@ export class OrdersSummaryComponent implements OnInit {
 
   backToHomePage() {
     this.router.navigate(['/all-orders']);
+  }
+
+  copyToClipboard(n: string | number | undefined | null) {
+    if (n) {
+      navigator.clipboard.writeText(n.toString());
+      this.toastr.success('Copied to clipboard');
+    }
   }
 
   leaveGroup() {
