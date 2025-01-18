@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { of } from 'rxjs';
@@ -12,6 +12,7 @@ import { PreviousOrderSidebarComponent } from '../../components/previous-order-s
 import { DialogModule } from 'primeng/dialog';
 import { AccountNumberPopUpComponent } from '../../components/account-number-pop-up/account-number-pop-up.component';
 import { or } from 'firebase/firestore';
+import { Unsubscribe } from '@angular/fire/auth';
 
 @Component({
   selector: 'app-all-orders',
@@ -28,7 +29,7 @@ import { or } from 'firebase/firestore';
   styleUrl: './all-orders.component.scss',
   providers: [],
 })
-export class AllOrdersComponent implements OnInit {
+export class AllOrdersComponent implements OnInit, OnDestroy {
   private orderService = inject(OrderService);
   private authService = inject(AuthService);
   private userService = inject(UsersService);
@@ -43,6 +44,7 @@ export class AllOrdersComponent implements OnInit {
   sidebarDisplayed = false;
   hasMoreOrders = true;
   showAccountNumberPop = false;
+  unsub: Unsubscribe | undefined;
 
   constructor() {}
 
@@ -108,7 +110,7 @@ export class AllOrdersComponent implements OnInit {
     if (!date) return;
 
     try {
-      this.orderService.listenToOrderUpdates(
+      this.unsub = this.orderService.listenToOrderUpdates(
         formatDateToDocName(date),
         async (doc) => {
           if (doc.exists()) {
@@ -134,5 +136,11 @@ export class AllOrdersComponent implements OnInit {
 
   ngOnInit() {
     this.getCreators(new Date());
+  }
+
+  ngOnDestroy() {
+    if (this.unsub) {
+      this.unsub();
+    }
   }
 }

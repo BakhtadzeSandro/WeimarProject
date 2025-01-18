@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { isEqual } from 'lodash';
 import { ToastrService } from 'ngx-toastr';
@@ -8,6 +8,7 @@ import { OrderCardComponent } from '../../components/index';
 import { FirestoreUser, GroupedOrders, Order } from '../../models/index';
 import { AuthService, OrderService, UsersService } from '../../services/index';
 import { formatDateToDocName } from '../../utils/date.utils';
+import { Unsubscribe } from '@angular/fire/auth';
 
 @Component({
   selector: 'app-orders-summary',
@@ -17,7 +18,7 @@ import { formatDateToDocName } from '../../utils/date.utils';
   imports: [OrderCardComponent, CommonModule],
   providers: [OrderService, ToastrService],
 })
-export class OrdersSummaryComponent implements OnInit {
+export class OrdersSummaryComponent implements OnInit, OnDestroy {
   private orderService = inject(OrderService);
   private userService = inject(UsersService);
   private authService = inject(AuthService);
@@ -39,6 +40,8 @@ export class OrdersSummaryComponent implements OnInit {
   orderCreator: FirestoreUser | undefined;
 
   groupLeaverId: string | undefined;
+
+  unsub: Unsubscribe | undefined;
 
   get orderPrice() {
     if (this._originalOrders) {
@@ -126,7 +129,7 @@ export class OrdersSummaryComponent implements OnInit {
     await this.getOrderCreator();
 
     if (this.selectedDate) {
-      this.orderService.listenToOrderUpdates(
+      this.unsub = this.orderService.listenToOrderUpdates(
         formatDateToDocName(this.selectedDate),
         (doc) => {
           const data = doc.data();
@@ -163,5 +166,11 @@ export class OrdersSummaryComponent implements OnInit {
         : new Date();
       this.getOrders();
     });
+  }
+
+  ngOnDestroy() {
+    if (this.unsub) {
+      this.unsub();
+    }
   }
 }
