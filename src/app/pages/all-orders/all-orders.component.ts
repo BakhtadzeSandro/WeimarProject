@@ -1,7 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { DatePickerModule } from 'primeng/datepicker';
 import { of } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { FirestoreUser } from '../../models/index';
@@ -17,7 +16,6 @@ import { AccountNumberPopUpComponent } from '../../components/account-number-pop
   selector: 'app-all-orders',
   standalone: true,
   imports: [
-    DatePickerModule,
     FormsModule,
     ButtonModule,
     CommonModule,

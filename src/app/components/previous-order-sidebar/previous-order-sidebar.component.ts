@@ -1,8 +1,7 @@
-import { Component, inject, OnChanges, OnInit } from '@angular/core';
+import { Component, inject, OnChanges } from '@angular/core';
 import { FirestoreUser } from '../../models';
 import { OrderService, UsersService } from '../../services';
 import { Router } from '@angular/router';
-import { DatePickerModule } from 'primeng/datepicker';
 import { FormsModule } from '@angular/forms';
 import { SidebarModule } from 'primeng/sidebar';
 import { ButtonModule } from 'primeng/button';
@@ -14,7 +13,6 @@ import { Input, Output, EventEmitter } from '@angular/core';
   selector: 'app-previous-order-sidebar',
   standalone: true,
   imports: [
-    DatePickerModule,
     FormsModule,
     SidebarModule,
     ButtonModule,
@@ -25,7 +23,7 @@ import { Input, Output, EventEmitter } from '@angular/core';
   templateUrl: './previous-order-sidebar.component.html',
   styleUrl: './previous-order-sidebar.component.scss',
 })
-export class PreviousOrderSidebarComponent implements OnInit, OnChanges {
+export class PreviousOrderSidebarComponent implements OnChanges {
   @Input() sidebarVisible = false;
 
   @Output() sidebarVisibleChange = new EventEmitter<boolean>();
@@ -122,19 +120,18 @@ export class PreviousOrderSidebarComponent implements OnInit, OnChanges {
         ];
 
         this.lastDocId = lastDocId;
-        this.hasMoreOrders = docs.length > 0;
+        this.hasMoreOrders = docs.length === 10;
       });
-  }
-
-  ngOnInit(): void {
-    this.displaySidebar();
-  }
-
-  ngOnChanges() {
-    this.sidebarDisplayed = this.sidebarVisible;
   }
 
   onHide() {
     this.sidebarVisibleChange.emit(this.sidebarDisplayed);
+  }
+
+  ngOnChanges() {
+    this.sidebarDisplayed = this.sidebarVisible;
+    if (this.sidebarVisible) {
+      this.displaySidebar();
+    }
   }
 }

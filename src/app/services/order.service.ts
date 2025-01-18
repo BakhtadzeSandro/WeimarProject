@@ -195,13 +195,14 @@ export class OrderService {
   async retrieveOrdersForPagination(lastDocId: string | null = null) {
     let q = query(
       collection(this.firestore, 'orders'),
-      orderBy('createdAt'),
+      orderBy('createdAt', 'desc'),
       limit(10)
     );
 
     if (lastDocId) {
       const lastDocRef = doc(this.firestore, 'orders', lastDocId);
-      q = query(q, startAfter(lastDocRef.id));
+      const lastDocSnapshot = await getDoc(lastDocRef);
+      q = query(q, startAfter(lastDocSnapshot));
     }
 
     const querySnapshot = await getDocs(q);
