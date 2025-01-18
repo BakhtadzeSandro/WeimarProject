@@ -1,6 +1,4 @@
 .check-last-orders {
-  // width: 90%;
-  // padding-top: 30px;
   padding: 25px;
   display: flex;
   flex-direction: column;
@@ -9,8 +7,30 @@
   .actions {
     margin-bottom: 10px;
     display: flex;
-    flex-direction: row;
-    justify-content: space-between;
+    flex-direction: row; /* Align elements in a row */
+    justify-content: space-between; /* Space between elements */
+    align-items: center; /* Align items vertically */
+    gap: 10px; /* Add spacing between child elements */
+
+    p,
+    i {
+      text-align: center;
+      color: #4caf50;
+      font-weight: bold;
+      margin: 0;
+    }
+
+    i:hover {
+      cursor: pointer;
+      color: #388e3c;
+    }
+
+    .contact-info {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 5px;
+    }
   }
 
   .back-link {
