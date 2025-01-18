@@ -1,0 +1,42 @@
+<p-sidebar
+  [(visible)]="sidebarDisplayed"
+  [dismissible]="false"
+  (visibleChange)="onHide()"
+>
+  <div class="sidebar-content">
+    <h3>Previous Orders</h3>
+    @for (prevOrder of previousOrderIds; track $index) {
+    <div class="order-item">
+      <div class="order-header" (click)="toggleOrderDetails(prevOrder)">
+        <p>{{ prevOrder }}</p>
+        <i
+          class="pi"
+          [ngClass]="{
+            'pi-angle-down': !isOrderDetailsVisible(prevOrder),
+            'pi-angle-up': isOrderDetailsVisible(prevOrder)
+          }"
+        ></i>
+      </div>
+      @if(isOrderDetailsVisible(prevOrder)){
+      <div class="order-details">
+        @if(previousGroupCreators){ @for(creator of
+        previousGroupCreators[prevOrder]; track $index){
+        <p class="group-name" (click)="clickOrderGroup(creator, prevOrder)">
+          {{ creator.name + "'s group" }}
+        </p>
+        } }
+      </div>
+      }
+    </div>
+    <p-divider />
+    } @if(hasMoreOrders){
+    <div class="load-more-container">
+      <p-button
+        label="Load More"
+        class="load-more-btn"
+        (click)="loadMoreOrders()"
+      ></p-button>
+    </div>
+    }
+  </div>
+</p-sidebar>

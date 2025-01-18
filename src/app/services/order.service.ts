@@ -10,11 +10,17 @@ import {
   onSnapshot,
   setDoc,
   updateDoc,
+  query,
+  DocumentData,
+  DocumentSnapshot,
+  limit,
+  orderBy,
+  startAfter,
+  Timestamp,
+  deleteField,
 } from '@angular/fire/firestore';
-
 import { initializeApp } from '@angular/fire/app';
 import { Router } from '@angular/router';
-import { DocumentData, DocumentSnapshot } from 'firebase/firestore';
 import { firebaseConfig } from '../../../environment';
 import {
   Ingredient,
@@ -94,6 +100,7 @@ export class OrderService {
       } else {
         await setDoc(docRef, {
           [creatorId]: [],
+          createdAt: Timestamp.fromDate(new Date()),
         });
       }
 
@@ -185,9 +192,32 @@ export class OrderService {
     }
   }
 
-  leaveGroup(creatorId: string, updatedOrders: Order[]) {
+  async retrieveOrdersForPagination(lastDocId: string | null = null) {
+    let q = query(
+      collection(this.firestore, 'orders'),
+      orderBy('createdAt', 'desc'),
+      limit(10)
+    );
+
+    if (lastDocId) {
+      const lastDocRef = doc(this.firestore, 'orders', lastDocId);
+      const lastDocSnapshot = await getDoc(lastDocRef);
+      q = query(q, startAfter(lastDocSnapshot));
+    }
+
+    const querySnapshot = await getDocs(q);
+
+    const lastDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
+    return { docs: querySnapshot.docs, lastDocId: lastDoc?.id || null };
+  }
+
+  leaveGroup(
+    creatorId: string,
+    updatedOrders: Order[],
+    isOrderCreator: boolean = false
+  ) {
     return updateDoc(doc(this.db, 'orders', formatDateToDocName()), {
-      [creatorId]: updatedOrders,
+      [creatorId]: isOrderCreator ? deleteField() : updatedOrders,
     });
   }
 }

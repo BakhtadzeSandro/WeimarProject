@@ -85,14 +85,14 @@ export class OrderComponent implements OnInit {
       .getCurrentUser()
       .pipe(
         switchMap((user) => {
-          console.log(originalOrders);
           const updatedOrders =
             originalOrders?.filter(
               (order) => order.orderedBy !== user?.displayName
             ) ?? [];
           this.orderService.leaveGroup(
             this.orderCreator?.id ?? '',
-            updatedOrders
+            updatedOrders,
+            user?.uid === this.orderCreator?.id
           );
 
           return of(user);

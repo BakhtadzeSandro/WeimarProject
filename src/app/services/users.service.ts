@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { initializeApp } from '@angular/fire/app';
-import { doc, getDoc, getFirestore } from '@angular/fire/firestore';
+import { doc, getDoc, getFirestore, updateDoc } from '@angular/fire/firestore';
 import { DocumentData, DocumentReference } from 'firebase/firestore';
 import { firebaseConfig } from '../../../environment';
 import { FirestoreUser } from '../models/index';
@@ -29,5 +29,11 @@ export class UsersService {
 
   getUserRef(userId: string): DocumentReference<FirestoreUser> {
     return doc<FirestoreUser, DocumentData>(this.db, 'users', userId);
+  }
+
+  updateUser(userId: string, data: Partial<FirestoreUser>) {
+    const docRef = doc(this.db, 'users', userId);
+
+    return updateDoc(docRef, data);
   }
 }

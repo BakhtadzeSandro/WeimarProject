@@ -1,0 +1,131 @@
+import { CommonModule } from '@angular/common';
+import { Component, inject, OnInit, signal } from '@angular/core';
+import {
+  FormBuilder,
+  FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import { ButtonModule } from 'primeng/button';
+import { MultiSelectModule } from 'primeng/multiselect';
+import { Select } from 'primeng/select';
+import { TextareaModule } from 'primeng/textarea';
+import {
+  AccountNumberForm,
+  SingleSelectOption,
+} from '../../models/forms.model';
+import { InputTextModule } from 'primeng/inputtext';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { MessageModule } from 'primeng/message';
+import { AuthService, OrderService, UsersService } from '../../services';
+import { of, switchMap } from 'rxjs';
+
+@Component({
+  selector: 'app-account-number-pop-up',
+  standalone: true,
+  imports: [
+    ButtonModule,
+    MultiSelectModule,
+    FormsModule,
+    ReactiveFormsModule,
+    CommonModule,
+    TextareaModule,
+    InputTextModule,
+    ButtonModule,
+    Select,
+    InputNumberModule,
+    MessageModule,
+  ],
+  templateUrl: './account-number-pop-up.component.html',
+  styleUrl: './account-number-pop-up.component.scss',
+})
+export class AccountNumberPopUpComponent implements OnInit {
+  bankOptions: SingleSelectOption[] = [
+    { label: 'BOG', value: 'BOG' },
+    { label: 'TBC', value: 'TBC' },
+    { label: 'Personal number', value: 'Personal number' },
+  ];
+
+  // 35701130489
+
+  private userService = inject(UsersService);
+  private authService = inject(AuthService);
+  private orderService = inject(OrderService);
+  private fb = inject(FormBuilder);
+
+  accountNumberIsInvalid = false;
+  personalNumberIsInvalid = false;
+  orderForm = signal<FormGroup<AccountNumberForm>>(this.buildForm());
+
+  buildForm() {
+    return this.fb.group<AccountNumberForm>({
+      bank: this.fb.control(null),
+      personalNumber: this.fb.control(null),
+      accountNumber: this.fb.control(''),
+    });
+  }
+
+  submitForm() {
+    if (this.orderForm().get('bank')?.value?.value === 'Personal number') {
+      this.orderForm()
+        .get('personalNumber')
+        ?.setValidators(Validators.required);
+
+      const v = this.orderForm().get('personalNumber')?.value;
+
+      if (v && v.toString().length === 11 && this.orderForm().valid) {
+        this.authService
+          .getCurrentUser()
+          .pipe(
+            switchMap(async (user) => {
+              this.userService.updateUser(user?.uid ?? '', {
+                personalNumber: this.orderForm().get('personalNumber')?.value,
+              });
+
+              return user;
+            }),
+            switchMap((user) => {
+              this.orderService.createNewGroup(user?.uid ?? '');
+              return of(user);
+            })
+          )
+          .subscribe();
+      } else {
+        this.personalNumberIsInvalid = true;
+      }
+      return;
+    }
+
+    this.orderForm().get('accountNumber')?.setValidators(Validators.required);
+
+    if (
+      this.orderForm().get('accountNumber')?.value &&
+      this.orderForm().get('accountNumber')?.value?.length === 22 &&
+      this.orderForm().valid
+    ) {
+      this.authService
+        .getCurrentUser()
+        .pipe(
+          switchMap(async (user) => {
+            this.userService.updateUser(user?.uid ?? '', {
+              [this.orderForm().get('bank')?.value?.value === 'BOG'
+                ? 'bogAccountNumber'
+                : 'tbcAccountNumber']:
+                this.orderForm().get('accountNumber')?.value,
+            });
+
+            return user;
+          }),
+          switchMap((user) => {
+            this.orderService.createNewGroup(user?.uid ?? '');
+            return of(user);
+          })
+        )
+        .subscribe();
+    }
+    this.accountNumberIsInvalid = true;
+  }
+
+  ngOnInit(): void {}
+}

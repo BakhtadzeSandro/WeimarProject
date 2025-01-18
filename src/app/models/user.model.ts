@@ -8,5 +8,7 @@ export interface FirestoreUser {
   email: string;
   name: string;
   photoUrl: string;
-  accountNumber: string;
+  bogAccountNumber: string | null;
+  tbcAccountNumber: string | null;
+  personalNumber: number | null;
 }
