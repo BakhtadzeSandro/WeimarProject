@@ -18,8 +18,6 @@ import { formatDateToDocName } from '../../utils/date.utils';
   providers: [OrderService, ToastrService],
 })
 export class OrdersSummaryComponent implements OnInit {
-  // TODO: show weimar number
-
   private orderService = inject(OrderService);
   private userService = inject(UsersService);
   private authService = inject(AuthService);
