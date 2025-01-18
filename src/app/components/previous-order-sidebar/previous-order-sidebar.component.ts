@@ -119,6 +119,15 @@ export class PreviousOrderSidebarComponent implements OnChanges {
           ...docs.map((doc) => doc.id),
         ];
 
+        docs.forEach(async (doc) => {
+          this.previousOrders = {
+            ...this.previousOrders,
+            [doc.id]: Object.keys(doc.data()).filter(
+              (key) => key !== 'createdAt'
+            ),
+          };
+        });
+
         this.lastDocId = lastDocId;
         this.hasMoreOrders = docs.length === 10;
       });
