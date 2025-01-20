@@ -287,7 +287,16 @@ export class OrderComponent implements OnInit {
             );
           })
         )
-        .subscribe();
+        .subscribe((result) => {
+          if (!result) {
+            this.toastr.error(
+              'Group may not exist any more',
+              'Error submitting order'
+            );
+            this.router.navigate(['/all-orders']);
+            return;
+          }
+        });
     } else {
       return;
     }

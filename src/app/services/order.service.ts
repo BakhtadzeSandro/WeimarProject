@@ -125,7 +125,7 @@ export class OrderService {
     }
   }
 
-  async submitOrder(order: Order, creatorId: string): Promise<void> {
+  async submitOrder(order: Order, creatorId: string): Promise<boolean> {
     const docRef = doc(this.db, 'orders', formatDateToDocName());
 
     try {
@@ -134,6 +134,10 @@ export class OrderService {
       const orders = docSnapshot.data() ? docSnapshot.data()![creatorId] : [];
       let finalOrders: Order[] = [];
       let newOrder: boolean = false;
+
+      if (!orders) {
+        return false;
+      }
 
       if (orders.length > 0) {
         finalOrders = orders.map((o: Order) => {
@@ -156,8 +160,10 @@ export class OrderService {
       }
 
       this.router.navigate([`order/${creatorId}/summary`]);
+      return true;
     } catch (error) {
       console.error('Error submitting order:', error);
+      return false;
     }
   }
 
