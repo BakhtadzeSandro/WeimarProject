@@ -52,18 +52,18 @@ export class AllOrdersComponent implements OnInit, OnDestroy {
     this.authService
       .getCurrentUser()
       .pipe(
-        switchMap(async (val) => {
+        switchMap((val) => {
           if (!val) return of(null);
 
-          const orders = await this.orderService.retrieveOrdersPerUser(
+          return this.orderService.isUserInOrderGroup(
             formatDateToDocName(),
-            orderCreator.id
+            orderCreator.id,
+            val.displayName ?? ''
           );
-
-          return orders.some((order) => order.photoUrl === val.photoURL);
         })
       )
       .subscribe((isInOrder) => {
+        console.log(isInOrder);
         if (isInOrder) {
           this.router.navigate(['order/' + orderCreator.id + '/summary']);
           return;
@@ -72,7 +72,7 @@ export class AllOrdersComponent implements OnInit, OnDestroy {
       });
   }
 
-  async displaySidebar() {
+  displaySidebar() {
     this.sidebarDisplayed = true;
   }
 
@@ -80,50 +80,46 @@ export class AllOrdersComponent implements OnInit, OnDestroy {
     return this.authService
       .getCurrentUser()
       .pipe(
-        switchMap(async (val) => {
-          if (!val) return null;
-          const user = await this.userService.getUserWithId(val.uid);
-
-          if (
-            user?.bogAccountNumber ||
-            user?.tbcAccountNumber ||
-            user?.personalNumber ||
-            user?.bogAccountNumber === '' ||
-            user?.tbcAccountNumber === '' ||
-            user?.personalNumber === 0
-          ) {
-            return val;
-          }
-
-          this.showAccountNumberPop = true;
-          return null;
-        }),
         switchMap((val) => {
           if (!val) return of(null);
-          return this.orderService.createNewGroup(val.uid);
+
+          return this.userService
+            .canCreateOrder(val.uid)
+            .then((canCreateOrder) => ({
+              user: val,
+              canCreateOrder,
+            }));
+        }),
+        switchMap((result) => {
+          console.log(result);
+          if (!result?.canCreateOrder) {
+            this.showAccountNumberPop = true;
+            return of(null);
+          }
+          return this.orderService.createNewGroup(result?.user.uid ?? '');
         })
       )
       .subscribe();
   }
 
-  async getCreators(date: Date | undefined) {
+  getCreators(date: Date | undefined) {
     if (!date) return;
 
     try {
       this.unsub = this.orderService.listenToOrderUpdates(
         formatDateToDocName(date),
-        async (doc) => {
+        (doc) => {
           if (doc.exists()) {
             this.orderCreatorsIds = Object.keys(doc.data());
 
             const creatorPromises = this.orderCreatorsIds.map((id) =>
               this.userService.getUserWithId(id)
             );
-            const creators = await Promise.all(creatorPromises);
-
-            this.orderCreators = creators.filter(
-              (creator) => creator !== undefined && creator !== null
-            ) as FirestoreUser[];
+            Promise.all(creatorPromises).then((creators) => {
+              this.orderCreators = creators.filter(
+                (creator) => creator !== undefined && creator !== null
+              ) as FirestoreUser[];
+            });
           } else {
             this.orderCreators = [];
           }

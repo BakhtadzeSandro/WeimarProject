@@ -18,6 +18,7 @@ import {
   startAfter,
   Timestamp,
   deleteField,
+  where,
 } from '@angular/fire/firestore';
 import { initializeApp } from '@angular/fire/app';
 import { Router } from '@angular/router';
@@ -29,6 +30,7 @@ import {
   productInfo,
 } from '../models/index';
 import { formatDateToDocName } from '../utils/date.utils';
+import { from, map } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -211,13 +213,42 @@ export class OrderService {
     return { docs: querySnapshot.docs, lastDocId: lastDoc?.id || null };
   }
 
-  leaveGroup(
+  async leaveGroup(
     creatorId: string,
-    updatedOrders: Order[],
+    userName: string = '',
+    updatedOrders: Order[] = [],
     isOrderCreator: boolean = false
   ) {
+    if (isOrderCreator) {
+      return updateDoc(doc(this.db, 'orders', formatDateToDocName()), {
+        [creatorId]: deleteField(),
+      });
+    }
+    if (updatedOrders.length === 0) {
+      const originalOrders: Order[] = await this.retrieveOrdersPerUser(
+        formatDateToDocName(new Date()),
+        creatorId
+      );
+
+      updatedOrders =
+        originalOrders?.filter((order) => order.orderedBy !== userName) ?? [];
+    }
+
     return updateDoc(doc(this.db, 'orders', formatDateToDocName()), {
-      [creatorId]: isOrderCreator ? deleteField() : updatedOrders,
+      [creatorId]: updatedOrders,
     });
+  }
+
+  async isUserInOrderGroup(
+    dateDocName: string,
+    orderCreatorId: string,
+    displayName: string
+  ) {
+    const orders = await this.retrieveOrdersPerUser(
+      dateDocName,
+      orderCreatorId
+    );
+
+    return orders.some((order) => order.orderedBy === displayName);
   }
 }

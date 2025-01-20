@@ -8,18 +8,18 @@ import {
   Validators,
 } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { InputTextModule } from 'primeng/inputtext';
+import { MessageModule } from 'primeng/message';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { Select } from 'primeng/select';
 import { TextareaModule } from 'primeng/textarea';
+import { of, switchMap } from 'rxjs';
 import {
   AccountNumberForm,
   SingleSelectOption,
 } from '../../models/forms.model';
-import { InputTextModule } from 'primeng/inputtext';
-import { InputNumberModule } from 'primeng/inputnumber';
-import { MessageModule } from 'primeng/message';
 import { AuthService, OrderService, UsersService } from '../../services';
-import { of, switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-account-number-pop-up',
@@ -46,8 +46,6 @@ export class AccountNumberPopUpComponent implements OnInit {
     { label: 'TBC', value: 'TBC' },
     { label: 'Personal number', value: 'Personal number' },
   ];
-
-  // 35701130489
 
   private userService = inject(UsersService);
   private authService = inject(AuthService);
@@ -78,12 +76,12 @@ export class AccountNumberPopUpComponent implements OnInit {
         this.authService
           .getCurrentUser()
           .pipe(
-            switchMap(async (user) => {
+            switchMap((user) => {
               this.userService.updateUser(user?.uid ?? '', {
                 personalNumber: this.orderForm().get('personalNumber')?.value,
               });
 
-              return user;
+              return of(user);
             }),
             switchMap((user) => {
               this.orderService.createNewGroup(user?.uid ?? '');
@@ -107,7 +105,7 @@ export class AccountNumberPopUpComponent implements OnInit {
       this.authService
         .getCurrentUser()
         .pipe(
-          switchMap(async (user) => {
+          switchMap((user) => {
             this.userService.updateUser(user?.uid ?? '', {
               [this.orderForm().get('bank')?.value?.value === 'BOG'
                 ? 'bogAccountNumber'
@@ -115,7 +113,7 @@ export class AccountNumberPopUpComponent implements OnInit {
                 this.orderForm().get('accountNumber')?.value,
             });
 
-            return user;
+            return of(user);
           }),
           switchMap((user) => {
             this.orderService.createNewGroup(user?.uid ?? '');

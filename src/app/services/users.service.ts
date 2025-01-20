@@ -36,4 +36,21 @@ export class UsersService {
 
     return updateDoc(docRef, data);
   }
+
+  async canCreateOrder(userId: string): Promise<boolean> {
+    const user = await this.getUserWithId(userId);
+
+    if (
+      user?.bogAccountNumber ||
+      user?.tbcAccountNumber ||
+      user?.personalNumber ||
+      user?.bogAccountNumber === '' ||
+      user?.tbcAccountNumber === '' ||
+      user?.personalNumber === 0
+    ) {
+      return true;
+    }
+
+    return false;
+  }
 }

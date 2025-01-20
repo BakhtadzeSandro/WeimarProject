@@ -56,37 +56,40 @@ export class PreviousOrderSidebarComponent implements OnChanges {
     });
   }
 
-  async displaySidebar() {
-    const { docs, lastDocId } =
-      await this.orderService.retrieveOrdersForPagination();
+  displaySidebar() {
+    this.orderService
+      .retrieveOrdersForPagination()
+      .then(({ docs, lastDocId }) => {
+        this.previousOrderIds = docs
+          .map((doc) => {
+            if (
+              Object.keys(doc.data()).filter((key) => key !== 'createdAt')
+                .length > 0
+            ) {
+              return doc.id;
+            }
+            return '';
+          })
+          .filter((id) => id !== '');
 
-    this.previousOrderIds = docs
-      .map((doc) => {
-        if (
-          Object.keys(doc.data()).filter((key) => key !== 'createdAt').length >
-          0
-        ) {
-          return doc.id;
-        }
-        return '';
-      })
-      .filter((id) => id !== '');
+        docs.forEach((doc) => {
+          this.previousOrders = {
+            ...this.previousOrders,
+            [doc.id]: Object.keys(doc.data()).filter(
+              (key) => key !== 'createdAt'
+            ),
+          };
+        });
 
-    docs.forEach(async (doc) => {
-      this.previousOrders = {
-        ...this.previousOrders,
-        [doc.id]: Object.keys(doc.data()).filter((key) => key !== 'createdAt'),
-      };
-    });
-
-    this.lastDocId = lastDocId;
+        this.lastDocId = lastDocId;
+      });
   }
 
   isOrderDetailsVisible(orderId: string): boolean {
     return this.visibleOrderDetails.includes(orderId);
   }
 
-  async toggleOrderDetails(date: string) {
+  toggleOrderDetails(date: string) {
     if (this.visibleOrderDetails.includes(date)) {
       this.visibleOrderDetails.splice(
         this.visibleOrderDetails.indexOf(date),
@@ -95,19 +98,20 @@ export class PreviousOrderSidebarComponent implements OnChanges {
       return;
     }
     this.visibleOrderDetails.push(date);
-    if (!this.previousGroupCreators?.[date]) await this.loadOrderDetails(date);
+    if (!this.previousGroupCreators?.[date]) this.loadOrderDetails(date);
   }
 
-  async loadOrderDetails(date: string) {
-    const response = await Promise.all(
+  loadOrderDetails(date: string) {
+    Promise.all(
       this.previousOrders?.[date].map((id) =>
         this.userService.getUserWithId(id)
       ) || []
-    );
-    this.previousGroupCreators = {
-      ...this.previousGroupCreators,
-      [date]: response as FirestoreUser[],
-    };
+    ).then((response) => {
+      this.previousGroupCreators = {
+        ...this.previousGroupCreators,
+        [date]: response as FirestoreUser[],
+      };
+    });
   }
 
   loadMoreOrders() {
@@ -119,7 +123,7 @@ export class PreviousOrderSidebarComponent implements OnChanges {
           ...docs.map((doc) => doc.id),
         ];
 
-        docs.forEach(async (doc) => {
+        docs.forEach((doc) => {
           this.previousOrders = {
             ...this.previousOrders,
             [doc.id]: Object.keys(doc.data()).filter(

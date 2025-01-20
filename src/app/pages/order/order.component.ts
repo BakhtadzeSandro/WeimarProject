@@ -74,24 +74,15 @@ export class OrderComponent implements OnInit {
     this.router.navigate([`order/${this.orderCreator?.id}/summary`]);
   }
 
-  async leaveGroup() {
-    const originalOrders: Order[] =
-      await this.orderService.retrieveOrdersPerUser(
-        formatDateToDocName(new Date()),
-        this.orderCreator?.id ?? ''
-      );
-
+  leaveGroup() {
     this.authService
       .getCurrentUser()
       .pipe(
         switchMap((user) => {
-          const updatedOrders =
-            originalOrders?.filter(
-              (order) => order.orderedBy !== user?.displayName
-            ) ?? [];
           this.orderService.leaveGroup(
             this.orderCreator?.id ?? '',
-            updatedOrders,
+            user?.displayName ?? '',
+            [],
             user?.uid === this.orderCreator?.id
           );
 
