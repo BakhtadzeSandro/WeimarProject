@@ -15,6 +15,7 @@ import { MultiSelectModule } from 'primeng/multiselect';
 import { Select } from 'primeng/select';
 import { TextareaModule } from 'primeng/textarea';
 import { of, switchMap } from 'rxjs';
+import { BankOptions } from '../../models';
 import {
   AccountNumberForm,
   SingleSelectOption,
@@ -41,11 +42,7 @@ import { AuthService, OrderService, UsersService } from '../../services';
   styleUrl: './account-number-pop-up.component.scss',
 })
 export class AccountNumberPopUpComponent implements OnInit {
-  bankOptions: SingleSelectOption[] = [
-    { label: 'BOG', value: 'BOG' },
-    { label: 'TBC', value: 'TBC' },
-    { label: 'Personal number', value: 'Personal number' },
-  ];
+  bankOptions: SingleSelectOption[] = [];
 
   private userService = inject(UsersService);
   private authService = inject(AuthService);
@@ -62,6 +59,17 @@ export class AccountNumberPopUpComponent implements OnInit {
       personalNumber: this.fb.control(null),
       accountNumber: this.fb.control(''),
     });
+  }
+
+  mapBankOptions(bankOptions: BankOptions[]) {
+    this.bankOptions = bankOptions.map((option) => ({
+      label: option.shortName,
+      value: option.shortName,
+    }));
+  }
+
+  getBankOptions() {
+    this.orderService.getBankOptions().then((val) => this.mapBankOptions(val));
   }
 
   submitForm() {
@@ -125,5 +133,7 @@ export class AccountNumberPopUpComponent implements OnInit {
     this.accountNumberIsInvalid = true;
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.getBankOptions();
+  }
 }

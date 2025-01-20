@@ -1,18 +1,17 @@
+import { CommonModule } from '@angular/common';
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { Unsubscribe } from '@angular/fire/auth';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
 import { of } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
+import { AccountNumberPopUpComponent } from '../../components/account-number-pop-up/account-number-pop-up.component';
+import { PreviousOrderSidebarComponent } from '../../components/previous-order-sidebar/previous-order-sidebar.component';
 import { FirestoreUser } from '../../models/index';
 import { AuthService, OrderService, UsersService } from '../../services/index';
 import { formatDateToDocName } from '../../utils/date.utils';
-import { ButtonModule } from 'primeng/button';
-import { CommonModule } from '@angular/common';
-import { PreviousOrderSidebarComponent } from '../../components/previous-order-sidebar/previous-order-sidebar.component';
-import { DialogModule } from 'primeng/dialog';
-import { AccountNumberPopUpComponent } from '../../components/account-number-pop-up/account-number-pop-up.component';
-import { or } from 'firebase/firestore';
-import { Unsubscribe } from '@angular/fire/auth';
 
 @Component({
   selector: 'app-all-orders',
@@ -63,7 +62,6 @@ export class AllOrdersComponent implements OnInit, OnDestroy {
         })
       )
       .subscribe((isInOrder) => {
-        console.log(isInOrder);
         if (isInOrder) {
           this.router.navigate(['order/' + orderCreator.id + '/summary']);
           return;
@@ -91,7 +89,6 @@ export class AllOrdersComponent implements OnInit, OnDestroy {
             }));
         }),
         switchMap((result) => {
-          console.log(result);
           if (!result?.canCreateOrder) {
             this.showAccountNumberPop = true;
             return of(null);

@@ -1,14 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { initializeApp } from '@angular/fire/app';
 import { Auth, signOut, user } from '@angular/fire/auth';
-import {
-  doc,
-  docSnapshots,
-  getDoc,
-  getFirestore,
-  setDoc,
-  updateDoc,
-} from '@angular/fire/firestore';
+import { doc, getDoc, getFirestore, setDoc } from '@angular/fire/firestore';
 import { Router } from '@angular/router';
 import {
   browserPopupRedirectResolver,

@@ -18,16 +18,15 @@ import { Toast } from 'primeng/toast';
 import { of, switchMap, tap } from 'rxjs';
 import { PreviousOrderModalComponent } from '../../components/index';
 import {
-  MultiselectOption,
-  OrderForm,
+  FirestoreUser,
   Ingredient,
   IngredientAdjustment,
+  MultiselectOption,
   Order,
+  OrderForm,
   productInfo,
-  FirestoreUser,
 } from '../../models/index';
 import { AuthService, OrderService, UsersService } from '../../services/index';
-import { formatDateToDocName } from '../../utils/date.utils';
 
 @Component({
   selector: 'app-order',

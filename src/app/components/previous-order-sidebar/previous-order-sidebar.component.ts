@@ -1,13 +1,19 @@
-import { Component, inject, OnChanges } from '@angular/core';
-import { FirestoreUser } from '../../models';
-import { OrderService, UsersService } from '../../services';
-import { Router } from '@angular/router';
+import { CommonModule, NgClass } from '@angular/common';
+import {
+  Component,
+  EventEmitter,
+  inject,
+  Input,
+  OnChanges,
+  Output,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { SidebarModule } from 'primeng/sidebar';
+import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { DividerModule } from 'primeng/divider';
-import { CommonModule, NgClass } from '@angular/common';
-import { Input, Output, EventEmitter } from '@angular/core';
+import { SidebarModule } from 'primeng/sidebar';
+import { FirestoreUser } from '../../models';
+import { OrderService, UsersService } from '../../services';
 
 @Component({
   selector: 'app-previous-order-sidebar',

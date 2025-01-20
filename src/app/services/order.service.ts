@@ -1,36 +1,37 @@
 import { inject, Injectable } from '@angular/core';
+import { initializeApp } from '@angular/fire/app';
 import {
   arrayUnion,
   collection,
+  deleteField,
   doc,
+  DocumentData,
+  DocumentSnapshot,
   Firestore,
   getDoc,
   getDocs,
   getFirestore,
-  onSnapshot,
-  setDoc,
-  updateDoc,
-  query,
-  DocumentData,
-  DocumentSnapshot,
   limit,
+  onSnapshot,
   orderBy,
+  query,
+  QueryDocumentSnapshot,
+  setDoc,
   startAfter,
   Timestamp,
-  deleteField,
-  where,
+  Unsubscribe,
+  updateDoc,
 } from '@angular/fire/firestore';
-import { initializeApp } from '@angular/fire/app';
 import { Router } from '@angular/router';
 import { firebaseConfig } from '../../../environment';
 import {
+  BankOptions,
   Ingredient,
   IngredientAdjustment,
   Order,
   productInfo,
 } from '../models/index';
 import { formatDateToDocName } from '../utils/date.utils';
-import { from, map } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -83,7 +84,19 @@ export class OrderService {
     return data as IngredientAdjustment[];
   }
 
-  async createNewGroup(creatorId: string) {
+  async getBankOptions(): Promise<BankOptions[]> {
+    const querySnapshot = await getDocs(
+      collection(this.firestore, 'bankOptions')
+    );
+
+    const data = querySnapshot.docs.map((doc) => ({
+      ...doc.data(),
+    }));
+
+    return data as BankOptions[];
+  }
+
+  async createNewGroup(creatorId: string): Promise<void> {
     const docRef = doc(this.db, 'orders', formatDateToDocName());
 
     try {
@@ -112,7 +125,7 @@ export class OrderService {
     }
   }
 
-  async submitOrder(order: Order, creatorId: string) {
+  async submitOrder(order: Order, creatorId: string): Promise<void> {
     const docRef = doc(this.db, 'orders', formatDateToDocName());
 
     try {
@@ -151,11 +164,14 @@ export class OrderService {
   listenToOrderUpdates(
     date: string,
     callback: (doc: DocumentSnapshot<DocumentData>) => void
-  ) {
+  ): Unsubscribe {
     return onSnapshot(doc(this.db, 'orders', date), callback);
   }
 
-  async retrieveOrdersPerUser(date: string, creatorId: string) {
+  async retrieveOrdersPerUser(
+    date: string,
+    creatorId: string
+  ): Promise<Order[]> {
     const docRef = doc(this.db, 'orders', date);
 
     try {
@@ -174,7 +190,12 @@ export class OrderService {
     }
   }
 
-  async retrieveOrders(date: string) {
+  async retrieveOrders(date: string): Promise<
+    | never[]
+    | {
+        [key: string]: Order[];
+      }
+  > {
     const docRef = doc(this.db, 'orders', date);
 
     try {
@@ -194,7 +215,10 @@ export class OrderService {
     }
   }
 
-  async retrieveOrdersForPagination(lastDocId: string | null = null) {
+  async retrieveOrdersForPagination(lastDocId: string | null = null): Promise<{
+    docs: QueryDocumentSnapshot<DocumentData, DocumentData>[];
+    lastDocId: string | null;
+  }> {
     let q = query(
       collection(this.firestore, 'orders'),
       orderBy('createdAt', 'desc'),
@@ -218,7 +242,7 @@ export class OrderService {
     userName: string = '',
     updatedOrders: Order[] = [],
     isOrderCreator: boolean = false
-  ) {
+  ): Promise<void> {
     if (isOrderCreator) {
       return updateDoc(doc(this.db, 'orders', formatDateToDocName()), {
         [creatorId]: deleteField(),
@@ -234,6 +258,10 @@ export class OrderService {
         originalOrders?.filter((order) => order.orderedBy !== userName) ?? [];
     }
 
+    if (!updatedOrders) {
+      return;
+    }
+
     return updateDoc(doc(this.db, 'orders', formatDateToDocName()), {
       [creatorId]: updatedOrders,
     });
@@ -243,7 +271,7 @@ export class OrderService {
     dateDocName: string,
     orderCreatorId: string,
     displayName: string
-  ) {
+  ): Promise<boolean> {
     const orders = await this.retrieveOrdersPerUser(
       dateDocName,
       orderCreatorId

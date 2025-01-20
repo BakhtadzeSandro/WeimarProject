@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { Unsubscribe } from '@angular/fire/auth';
 import { ActivatedRoute, Router } from '@angular/router';
 import { isEqual } from 'lodash';
 import { ToastrService } from 'ngx-toastr';
@@ -8,7 +9,6 @@ import { OrderCardComponent } from '../../components/index';
 import { FirestoreUser, GroupedOrders, Order } from '../../models/index';
 import { AuthService, OrderService, UsersService } from '../../services/index';
 import { formatDateToDocName } from '../../utils/date.utils';
-import { Unsubscribe } from '@angular/fire/auth';
 
 @Component({
   selector: 'app-orders-summary',

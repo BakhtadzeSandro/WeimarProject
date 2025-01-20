@@ -22,6 +22,11 @@ export interface productInfo {
   };
 }
 
+export interface BankOptions {
+  name: string;
+  shortName: string;
+}
+
 export interface productDetails {
   withEverything: boolean | null | undefined;
   restrictions: string[] | undefined;
