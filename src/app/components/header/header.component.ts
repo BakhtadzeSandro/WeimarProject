@@ -2,9 +2,9 @@ import { CommonModule } from '@angular/common';
 import { Component, HostListener, inject, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { User } from 'firebase/auth';
+import { OverlayModule } from 'primeng/overlay';
 import { Observable } from 'rxjs';
 import { AuthService } from '../../services/index';
-import { OverlayModule } from 'primeng/overlay';
 
 @Component({
   selector: 'app-header',

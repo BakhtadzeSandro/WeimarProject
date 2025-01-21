@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { Unsubscribe } from '@angular/fire/auth';
 import { ActivatedRoute, Router } from '@angular/router';
 import { isEqual } from 'lodash';
 import { ToastrService } from 'ngx-toastr';
@@ -8,7 +9,6 @@ import { OrderCardComponent } from '../../components/index';
 import { FirestoreUser, GroupedOrders, Order } from '../../models/index';
 import { AuthService, OrderService, UsersService } from '../../services/index';
 import { formatDateToDocName } from '../../utils/date.utils';
-import { Unsubscribe } from '@angular/fire/auth';
 
 @Component({
   selector: 'app-orders-summary',
@@ -87,6 +87,7 @@ export class OrdersSummaryComponent implements OnInit, OnDestroy {
 
           this.orderService.leaveGroup(
             this.orderCreator?.id ?? '',
+            user?.displayName ?? '',
             updatedOrders,
             user?.uid === this.orderCreator?.id
           );
@@ -125,36 +126,34 @@ export class OrdersSummaryComponent implements OnInit, OnDestroy {
     return groupedOrders;
   }
 
-  async getOrders() {
-    await this.getOrderCreator();
-
-    if (this.selectedDate) {
-      this.unsub = this.orderService.listenToOrderUpdates(
-        formatDateToDocName(this.selectedDate),
-        (doc) => {
-          const data = doc.data();
-          if (data) {
-            this._originalOrders = data[this.orderCreator?.id ?? ''] as Order[];
-            if (!this._originalOrders) {
-              this.router.navigate(['/all-orders']);
-              this.groupLeaverId === this.orderCreator?.id
-                ? ''
-                : this.toastr.error('Order creator left the group');
-            }
-            this.allOrdersLength = this._originalOrders?.length;
-            this.orders = this.groupOrders(this._originalOrders ?? []);
-          }
-        }
-      );
-    }
-  }
-
-  async getOrderCreator() {
+  getData() {
     const orderCreatorId = this.activatedRoute.snapshot.params['creatorId'];
 
-    await this.userService.getUserWithId(orderCreatorId ?? '').then((val) => {
+    this.userService.getUserWithId(orderCreatorId ?? '').then((val) => {
       if (val) {
         this.orderCreator = val;
+      }
+
+      if (this.selectedDate) {
+        this.unsub = this.orderService.listenToOrderUpdates(
+          formatDateToDocName(this.selectedDate),
+          (doc) => {
+            const data = doc.data();
+            if (data) {
+              this._originalOrders = data[
+                this.orderCreator?.id ?? ''
+              ] as Order[];
+              if (!this._originalOrders) {
+                this.router.navigate(['/all-orders']);
+                this.groupLeaverId === this.orderCreator?.id
+                  ? ''
+                  : this.toastr.error('Order creator left the group');
+              }
+              this.allOrdersLength = this._originalOrders?.length;
+              this.orders = this.groupOrders(this._originalOrders ?? []);
+            }
+          }
+        );
       }
     });
   }
@@ -164,7 +163,7 @@ export class OrdersSummaryComponent implements OnInit, OnDestroy {
       this.selectedDate = params['date']
         ? new Date(params['date'])
         : new Date();
-      this.getOrders();
+      this.getData();
     });
   }
 

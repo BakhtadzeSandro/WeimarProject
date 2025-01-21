@@ -51,6 +51,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+
     .submit-btn {
       font-size: 16px;
       color: #ffffff;
@@ -73,6 +74,27 @@
       &:active {
         transform: scale(0.95);
         box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.2);
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    .button-box {
+      flex-direction: column;
+      gap: 15px;
+      .submit-btn,
+      .leave-group-btn {
+        width: 100%;
+      }
+    }
+  }
+
+  @media (max-width: 568px) {
+    .old-order {
+      flex-direction: column;
+      gap: 15px;
+      .see-order-button {
+        width: 100%;
       }
     }
   }

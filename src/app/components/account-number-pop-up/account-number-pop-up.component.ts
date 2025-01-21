@@ -8,18 +8,19 @@ import {
   Validators,
 } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { InputTextModule } from 'primeng/inputtext';
+import { MessageModule } from 'primeng/message';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { Select } from 'primeng/select';
 import { TextareaModule } from 'primeng/textarea';
+import { of, switchMap } from 'rxjs';
+import { BankOptions } from '../../models';
 import {
   AccountNumberForm,
   SingleSelectOption,
 } from '../../models/forms.model';
-import { InputTextModule } from 'primeng/inputtext';
-import { InputNumberModule } from 'primeng/inputnumber';
-import { MessageModule } from 'primeng/message';
 import { AuthService, OrderService, UsersService } from '../../services';
-import { of, switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-account-number-pop-up',
@@ -41,13 +42,7 @@ import { of, switchMap } from 'rxjs';
   styleUrl: './account-number-pop-up.component.scss',
 })
 export class AccountNumberPopUpComponent implements OnInit {
-  bankOptions: SingleSelectOption[] = [
-    { label: 'BOG', value: 'BOG' },
-    { label: 'TBC', value: 'TBC' },
-    { label: 'Personal number', value: 'Personal number' },
-  ];
-
-  // 35701130489
+  bankOptions: SingleSelectOption[] = [];
 
   private userService = inject(UsersService);
   private authService = inject(AuthService);
@@ -66,6 +61,17 @@ export class AccountNumberPopUpComponent implements OnInit {
     });
   }
 
+  mapBankOptions(bankOptions: BankOptions[]) {
+    this.bankOptions = bankOptions.map((option) => ({
+      label: option.shortName,
+      value: option.shortName,
+    }));
+  }
+
+  getBankOptions() {
+    this.orderService.getBankOptions().then((val) => this.mapBankOptions(val));
+  }
+
   submitForm() {
     if (this.orderForm().get('bank')?.value?.value === 'Personal number') {
       this.orderForm()
@@ -78,12 +84,12 @@ export class AccountNumberPopUpComponent implements OnInit {
         this.authService
           .getCurrentUser()
           .pipe(
-            switchMap(async (user) => {
+            switchMap((user) => {
               this.userService.updateUser(user?.uid ?? '', {
                 personalNumber: this.orderForm().get('personalNumber')?.value,
               });
 
-              return user;
+              return of(user);
             }),
             switchMap((user) => {
               this.orderService.createNewGroup(user?.uid ?? '');
@@ -107,7 +113,7 @@ export class AccountNumberPopUpComponent implements OnInit {
       this.authService
         .getCurrentUser()
         .pipe(
-          switchMap(async (user) => {
+          switchMap((user) => {
             this.userService.updateUser(user?.uid ?? '', {
               [this.orderForm().get('bank')?.value?.value === 'BOG'
                 ? 'bogAccountNumber'
@@ -115,7 +121,7 @@ export class AccountNumberPopUpComponent implements OnInit {
                 this.orderForm().get('accountNumber')?.value,
             });
 
-            return user;
+            return of(user);
           }),
           switchMap((user) => {
             this.orderService.createNewGroup(user?.uid ?? '');
@@ -127,5 +133,7 @@ export class AccountNumberPopUpComponent implements OnInit {
     this.accountNumberIsInvalid = true;
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.getBankOptions();
+  }
 }
