@@ -1,0 +1,49 @@
+<div class="popup">
+  <p>Provide account number or personal before creating group</p>
+  <form [formGroup]="orderForm()">
+    <div>
+      <p-select
+        id="bank"
+        formControlName="bank"
+        [options]="bankOptions"
+        appendTo="body"
+        optionLabel="label"
+        placeholder="Choose bank or personal number"
+        styleClass="w-full md:w-80 mt-3"
+      />
+    </div>
+
+    <div class="size mt-3">
+      @if(orderForm().get('bank')?.value?.value === 'BOG' ||
+      orderForm().get('bank')?.value?.value === 'TBC' ){
+      <input
+        class="w-full"
+        type="text"
+        formControlName="accountNumber"
+        placeholder="Account number"
+        maxlength="22"
+        pInputText
+      />
+      @if(accountNumberIsInvalid){
+      <p-message severity="error" styleClass="mt-3" variant="simple"
+        >Account number is incorrect, it should have 22 symbols</p-message
+      >} } @if(orderForm().get('bank')?.value?.value === 'Personal number'){
+      <p-inputnumber
+        class="w-full"
+        type="number"
+        [useGrouping]="false"
+        formControlName="personalNumber"
+        placeholder="Personal number"
+        maxlength="11"
+      />
+      @if(personalNumberIsInvalid){
+      <p-message severity="error" styleClass="mt-3" variant="simple"
+        >Personal number is incorrect, it must have 11 number</p-message
+      >} }
+    </div>
+  </form>
+  <div class="popup-buttons">
+    <p-button label="Submit" (onClick)="submitForm()"></p-button>
+    <p-button label="Cancel" severity="secondary"></p-button>
+  </div>
+</div>

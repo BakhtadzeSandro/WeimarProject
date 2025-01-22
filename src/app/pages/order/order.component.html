@@ -6,28 +6,25 @@
   <div class="form">
     <form [formGroup]="orderForm()">
       <div class="old-order mt-5">
-        <div class="see-order-button">
-          <button
-            pButton
-            type="button"
-            class="mt-3"
-            [disabled]="!previousOrder"
-            (click)="loadPreviousOrder()"
-          >
-            Use my last order
-          </button>
-        </div>
-        <div class="see-order-button">
-          <button
-            pButton
-            type="button"
-            class="mt-3"
-            [disabled]="!previousOrder"
-            (click)="showPreviousOrder()"
-          >
-            See last order
-          </button>
-        </div>
+        <button
+          pButton
+          type="button"
+          class="see-order-button mt-3"
+          [disabled]="!previousOrder"
+          (click)="loadPreviousOrder()"
+        >
+          Use my last order
+        </button>
+
+        <button
+          pButton
+          type="button"
+          class="see-order-button mt-3"
+          [disabled]="!previousOrder"
+          (click)="showPreviousOrder()"
+        >
+          See last order
+        </button>
       </div>
       <div class="include-all mt-5">
         <p-radiobutton

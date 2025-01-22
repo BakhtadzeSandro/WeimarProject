@@ -1,22 +1,31 @@
 import { inject, Injectable } from '@angular/core';
+import { initializeApp } from '@angular/fire/app';
 import {
   arrayUnion,
   collection,
+  deleteField,
   doc,
+  DocumentData,
+  DocumentSnapshot,
   Firestore,
   getDoc,
   getDocs,
   getFirestore,
+  limit,
   onSnapshot,
+  orderBy,
+  query,
+  QueryDocumentSnapshot,
   setDoc,
+  startAfter,
+  Timestamp,
+  Unsubscribe,
   updateDoc,
 } from '@angular/fire/firestore';
-
-import { initializeApp } from '@angular/fire/app';
 import { Router } from '@angular/router';
-import { DocumentData, DocumentSnapshot } from 'firebase/firestore';
 import { firebaseConfig } from '../../../environment';
 import {
+  BankOptions,
   Ingredient,
   IngredientAdjustment,
   Order,
@@ -75,7 +84,19 @@ export class OrderService {
     return data as IngredientAdjustment[];
   }
 
-  async createNewGroup(creatorId: string) {
+  async getBankOptions(): Promise<BankOptions[]> {
+    const querySnapshot = await getDocs(
+      collection(this.firestore, 'bankOptions')
+    );
+
+    const data = querySnapshot.docs.map((doc) => ({
+      ...doc.data(),
+    }));
+
+    return data as BankOptions[];
+  }
+
+  async createNewGroup(creatorId: string): Promise<void> {
     const docRef = doc(this.db, 'orders', formatDateToDocName());
 
     try {
@@ -94,6 +115,7 @@ export class OrderService {
       } else {
         await setDoc(docRef, {
           [creatorId]: [],
+          createdAt: Timestamp.fromDate(new Date()),
         });
       }
 
@@ -103,7 +125,7 @@ export class OrderService {
     }
   }
 
-  async submitOrder(order: Order, creatorId: string) {
+  async submitOrder(order: Order, creatorId: string): Promise<boolean> {
     const docRef = doc(this.db, 'orders', formatDateToDocName());
 
     try {
@@ -112,6 +134,10 @@ export class OrderService {
       const orders = docSnapshot.data() ? docSnapshot.data()![creatorId] : [];
       let finalOrders: Order[] = [];
       let newOrder: boolean = false;
+
+      if (!orders) {
+        return false;
+      }
 
       if (orders.length > 0) {
         finalOrders = orders.map((o: Order) => {
@@ -134,19 +160,24 @@ export class OrderService {
       }
 
       this.router.navigate([`order/${creatorId}/summary`]);
+      return true;
     } catch (error) {
       console.error('Error submitting order:', error);
+      return false;
     }
   }
 
   listenToOrderUpdates(
     date: string,
     callback: (doc: DocumentSnapshot<DocumentData>) => void
-  ) {
+  ): Unsubscribe {
     return onSnapshot(doc(this.db, 'orders', date), callback);
   }
 
-  async retrieveOrdersPerUser(date: string, creatorId: string) {
+  async retrieveOrdersPerUser(
+    date: string,
+    creatorId: string
+  ): Promise<Order[]> {
     const docRef = doc(this.db, 'orders', date);
 
     try {
@@ -165,7 +196,12 @@ export class OrderService {
     }
   }
 
-  async retrieveOrders(date: string) {
+  async retrieveOrders(date: string): Promise<
+    | never[]
+    | {
+        [key: string]: Order[];
+      }
+  > {
     const docRef = doc(this.db, 'orders', date);
 
     try {
@@ -185,9 +221,68 @@ export class OrderService {
     }
   }
 
-  leaveGroup(creatorId: string, updatedOrders: Order[]) {
+  async retrieveOrdersForPagination(lastDocId: string | null = null): Promise<{
+    docs: QueryDocumentSnapshot<DocumentData, DocumentData>[];
+    lastDocId: string | null;
+  }> {
+    let q = query(
+      collection(this.firestore, 'orders'),
+      orderBy('createdAt', 'desc'),
+      limit(10)
+    );
+
+    if (lastDocId) {
+      const lastDocRef = doc(this.firestore, 'orders', lastDocId);
+      const lastDocSnapshot = await getDoc(lastDocRef);
+      q = query(q, startAfter(lastDocSnapshot));
+    }
+
+    const querySnapshot = await getDocs(q);
+
+    const lastDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
+    return { docs: querySnapshot.docs, lastDocId: lastDoc?.id || null };
+  }
+
+  async leaveGroup(
+    creatorId: string,
+    userName: string = '',
+    updatedOrders: Order[] = [],
+    isOrderCreator: boolean = false
+  ): Promise<void> {
+    if (isOrderCreator) {
+      return updateDoc(doc(this.db, 'orders', formatDateToDocName()), {
+        [creatorId]: deleteField(),
+      });
+    }
+    if (updatedOrders.length === 0) {
+      const originalOrders: Order[] = await this.retrieveOrdersPerUser(
+        formatDateToDocName(new Date()),
+        creatorId
+      );
+
+      updatedOrders =
+        originalOrders?.filter((order) => order.orderedBy !== userName) ?? [];
+    }
+
+    if (!updatedOrders) {
+      return;
+    }
+
     return updateDoc(doc(this.db, 'orders', formatDateToDocName()), {
       [creatorId]: updatedOrders,
     });
+  }
+
+  async isUserInOrderGroup(
+    dateDocName: string,
+    orderCreatorId: string,
+    displayName: string
+  ): Promise<boolean> {
+    const orders = await this.retrieveOrdersPerUser(
+      dateDocName,
+      orderCreatorId
+    );
+
+    return orders.some((order) => order.orderedBy === displayName);
   }
 }

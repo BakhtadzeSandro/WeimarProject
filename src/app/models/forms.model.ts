@@ -14,3 +14,14 @@ export interface MultiselectOption {
   price?: number;
   product?: string;
 }
+
+export interface AccountNumberForm {
+  bank: FormControl<SingleSelectOption | null>;
+  accountNumber: FormControl<string | null>;
+  personalNumber: FormControl<number | null>;
+}
+
+export interface SingleSelectOption {
+  label: string;
+  value: string;
+}

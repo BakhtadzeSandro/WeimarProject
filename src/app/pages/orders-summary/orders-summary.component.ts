@@ -1,10 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { Unsubscribe } from '@angular/fire/auth';
 import { ActivatedRoute, Router } from '@angular/router';
 import { isEqual } from 'lodash';
+import { ToastrService } from 'ngx-toastr';
 import { of, switchMap } from 'rxjs';
 import { OrderCardComponent } from '../../components/index';
-import { GroupedOrders, Order, FirestoreUser } from '../../models/index';
+import { FirestoreUser, GroupedOrders, Order } from '../../models/index';
 import { AuthService, OrderService, UsersService } from '../../services/index';
 import { formatDateToDocName } from '../../utils/date.utils';
 
@@ -14,15 +16,13 @@ import { formatDateToDocName } from '../../utils/date.utils';
   styleUrls: ['./orders-summary.component.scss'],
   standalone: true,
   imports: [OrderCardComponent, CommonModule],
-  providers: [OrderService],
+  providers: [OrderService, ToastrService],
 })
-export class OrdersSummaryComponent implements OnInit {
-  // TODO: show creators account number
-  // TODO: allow user to provide multiple banks account number or personal number
-
+export class OrdersSummaryComponent implements OnInit, OnDestroy {
   private orderService = inject(OrderService);
   private userService = inject(UsersService);
   private authService = inject(AuthService);
+  private toastr = inject(ToastrService);
   private router = inject(Router);
   private _originalOrders: Order[] | undefined;
   private activatedRoute = inject(ActivatedRoute);
@@ -31,11 +31,17 @@ export class OrdersSummaryComponent implements OnInit {
 
   selectedDate: Date | undefined;
 
+  today = new Date();
+
   similarOrdersFromDifferentUsers: any[] | undefined = [];
 
   orders: GroupedOrders[] | undefined;
 
   orderCreator: FirestoreUser | undefined;
+
+  groupLeaverId: string | undefined;
+
+  unsub: Unsubscribe | undefined;
 
   get orderPrice() {
     if (this._originalOrders) {
@@ -56,18 +62,34 @@ export class OrdersSummaryComponent implements OnInit {
     this.router.navigate([`order/${this.orderCreator?.id}`]);
   }
 
+  backToHomePage() {
+    this.router.navigate(['/all-orders']);
+  }
+
+  copyToClipboard(n: string | number | undefined | null) {
+    if (n) {
+      navigator.clipboard.writeText(n.toString());
+      this.toastr.success('Copied to clipboard');
+    }
+  }
+
   leaveGroup() {
     this.authService
       .getCurrentUser()
       .pipe(
         switchMap((user) => {
+          this.groupLeaverId = user?.uid;
+
           const updatedOrders =
             this._originalOrders?.filter(
               (order) => order.orderedBy !== user?.displayName
             ) ?? [];
+
           this.orderService.leaveGroup(
             this.orderCreator?.id ?? '',
-            updatedOrders
+            user?.displayName ?? '',
+            updatedOrders,
+            user?.uid === this.orderCreator?.id
           );
 
           return of(user);
@@ -104,35 +126,50 @@ export class OrdersSummaryComponent implements OnInit {
     return groupedOrders;
   }
 
-  async getOrders(date: Date | undefined) {
-    await this.getOrderCreator();
-
-    if (date) {
-      this.orderService.listenToOrderUpdates(
-        formatDateToDocName(date),
-        (doc) => {
-          const data = doc.data();
-          if (data) {
-            this._originalOrders = data[this.orderCreator?.id ?? ''] as Order[];
-            this.allOrdersLength = this._originalOrders?.length;
-            this.orders = this.groupOrders(this._originalOrders ?? []);
-          }
-        }
-      );
-    }
-  }
-
-  async getOrderCreator() {
+  getData() {
     const orderCreatorId = this.activatedRoute.snapshot.params['creatorId'];
 
-    await this.userService.getUserWithId(orderCreatorId ?? '').then((val) => {
+    this.userService.getUserWithId(orderCreatorId ?? '').then((val) => {
       if (val) {
         this.orderCreator = val;
+      }
+
+      if (this.selectedDate) {
+        this.unsub = this.orderService.listenToOrderUpdates(
+          formatDateToDocName(this.selectedDate),
+          (doc) => {
+            const data = doc.data();
+            if (data) {
+              this._originalOrders = data[
+                this.orderCreator?.id ?? ''
+              ] as Order[];
+              if (!this._originalOrders) {
+                this.router.navigate(['/all-orders']);
+                this.groupLeaverId === this.orderCreator?.id
+                  ? ''
+                  : this.toastr.error('Order creator left the group');
+              }
+              this.allOrdersLength = this._originalOrders?.length;
+              this.orders = this.groupOrders(this._originalOrders ?? []);
+            }
+          }
+        );
       }
     });
   }
 
   ngOnInit() {
-    this.getOrders(new Date());
+    this.activatedRoute.queryParams.subscribe((params) => {
+      this.selectedDate = params['date']
+        ? new Date(params['date'])
+        : new Date();
+      this.getData();
+    });
+  }
+
+  ngOnDestroy() {
+    if (this.unsub) {
+      this.unsub();
+    }
   }
 }

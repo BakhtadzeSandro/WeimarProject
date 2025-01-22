@@ -18,16 +18,15 @@ import { Toast } from 'primeng/toast';
 import { of, switchMap, tap } from 'rxjs';
 import { PreviousOrderModalComponent } from '../../components/index';
 import {
-  MultiselectOption,
-  OrderForm,
+  FirestoreUser,
   Ingredient,
   IngredientAdjustment,
+  MultiselectOption,
   Order,
+  OrderForm,
   productInfo,
-  FirestoreUser,
 } from '../../models/index';
 import { AuthService, OrderService, UsersService } from '../../services/index';
-import { formatDateToDocName } from '../../utils/date.utils';
 
 @Component({
   selector: 'app-order',
@@ -74,25 +73,16 @@ export class OrderComponent implements OnInit {
     this.router.navigate([`order/${this.orderCreator?.id}/summary`]);
   }
 
-  async leaveGroup() {
-    const originalOrders: Order[] =
-      await this.orderService.retrieveOrdersPerUser(
-        formatDateToDocName(new Date()),
-        this.orderCreator?.id ?? ''
-      );
-
+  leaveGroup() {
     this.authService
       .getCurrentUser()
       .pipe(
         switchMap((user) => {
-          console.log(originalOrders);
-          const updatedOrders =
-            originalOrders?.filter(
-              (order) => order.orderedBy !== user?.displayName
-            ) ?? [];
           this.orderService.leaveGroup(
             this.orderCreator?.id ?? '',
-            updatedOrders
+            user?.displayName ?? '',
+            [],
+            user?.uid === this.orderCreator?.id
           );
 
           return of(user);
@@ -297,7 +287,16 @@ export class OrderComponent implements OnInit {
             );
           })
         )
-        .subscribe();
+        .subscribe((result) => {
+          if (!result) {
+            this.toastr.error(
+              'Group may not exist any more',
+              'Error submitting order'
+            );
+            this.router.navigate(['/all-orders']);
+            return;
+          }
+        });
     } else {
       return;
     }
