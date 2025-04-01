@@ -1,0 +1,65 @@
+name: "🐞 Bug Report"
+description: "Report a bug to help improve the project"
+title: "[Bug]: "
+labels: ["bug"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: "## 🐛 Bug Report\nPlease describe the issue clearly."
+
+  - type: textarea
+    id: description
+    attributes:
+      label: "Describe the bug"
+      description: "A clear and concise description of the bug."
+      placeholder: "What happened? What did you expect to happen?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: "Steps to Reproduce"
+      description: "Steps to reproduce the behavior."
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. Scroll down to '...'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: "Expected Behavior"
+      description: "What should have happened?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: "Actual Behavior"
+      description: "What actually happened?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: "Screenshots (if applicable)"
+      description: "Add screenshots to help explain the problem."
+
+  - type: input
+    id: environment
+    attributes:
+      label: "Environment (if applicable)"
+      description: "OS, Browser, Device, or other relevant details."
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: "Additional Information"
+      description: "Anything else that might help?"

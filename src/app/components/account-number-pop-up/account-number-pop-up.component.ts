@@ -110,27 +110,25 @@ export class AccountNumberPopUpComponent implements OnInit {
       this.orderForm().get('accountNumber')?.value?.length === 22 &&
       this.orderForm().valid
     ) {
-      this.authService
-        .getCurrentUser()
-        .pipe(
-          switchMap((user) => {
-            this.userService.updateUser(user?.uid ?? '', {
-              [this.orderForm().get('bank')?.value?.value === 'BOG'
-                ? 'bogAccountNumber'
-                : 'tbcAccountNumber']:
-                this.orderForm().get('accountNumber')?.value,
-            });
+      this.authService.getCurrentUser().pipe(
+        switchMap((user) => {
+          this.userService.updateUser(user?.uid ?? '', {
+            [this.orderForm().get('bank')?.value?.value === 'BOG'
+              ? 'bogAccountNumber'
+              : 'tbcAccountNumber']:
+              this.orderForm().get('accountNumber')?.value,
+          });
 
-            return of(user);
-          }),
-          switchMap((user) => {
-            this.orderService.createNewGroup(user?.uid ?? '');
-            return of(user);
-          })
-        )
-        .subscribe();
+          return of(user);
+        }),
+        switchMap((user) => {
+          this.orderService.createNewGroup(user?.uid ?? '');
+          return of(user);
+        })
+      );
+    } else {
+      this.accountNumberIsInvalid = true;
     }
-    this.accountNumberIsInvalid = true;
   }
 
   ngOnInit(): void {
