@@ -28,10 +28,9 @@
       <p-message severity="error" styleClass="mt-3" variant="simple"
         >Account number is incorrect, it should have 22 symbols</p-message
       >} } @if(orderForm().get('bank')?.value?.value === 'Personal number'){
-      <p-inputnumber
+      <p-inputmask
         class="w-full"
-        type="number"
-        [useGrouping]="false"
+        mask="99999999999"
         formControlName="personalNumber"
         placeholder="Personal number"
         maxlength="11"

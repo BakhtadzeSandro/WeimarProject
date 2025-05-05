@@ -8,6 +8,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
+import { InputMaskModule } from 'primeng/inputmask';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
@@ -37,6 +38,7 @@ import { AuthService, OrderService, UsersService } from '../../services';
     Select,
     InputNumberModule,
     MessageModule,
+    InputMaskModule,
   ],
   templateUrl: './account-number-pop-up.component.html',
   styleUrl: './account-number-pop-up.component.scss',
@@ -110,22 +112,25 @@ export class AccountNumberPopUpComponent implements OnInit {
       this.orderForm().get('accountNumber')?.value?.length === 22 &&
       this.orderForm().valid
     ) {
-      this.authService.getCurrentUser().pipe(
-        switchMap((user) => {
-          this.userService.updateUser(user?.uid ?? '', {
-            [this.orderForm().get('bank')?.value?.value === 'BOG'
-              ? 'bogAccountNumber'
-              : 'tbcAccountNumber']:
-              this.orderForm().get('accountNumber')?.value,
-          });
+      this.authService
+        .getCurrentUser()
+        .pipe(
+          switchMap((user) => {
+            this.userService.updateUser(user?.uid ?? '', {
+              [this.orderForm().get('bank')?.value?.value === 'BOG'
+                ? 'bogAccountNumber'
+                : 'tbcAccountNumber']:
+                this.orderForm().get('accountNumber')?.value,
+            });
 
-          return of(user);
-        }),
-        switchMap((user) => {
-          this.orderService.createNewGroup(user?.uid ?? '');
-          return of(user);
-        })
-      );
+            return of(user);
+          }),
+          switchMap((user) => {
+            this.orderService.createNewGroup(user?.uid ?? '');
+            return of(user);
+          })
+        )
+        .subscribe();
     } else {
       this.accountNumberIsInvalid = true;
     }
