@@ -1,130 +1,321 @@
-.check-last-orders {
-  padding: 25px;
+.summary {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--gap);
+  align-items: start;
+}
+
+.order-block,
+.people-block {
+  grid-column: 1 / span 8;
+  padding-top: 16px;
+}
+
+.people-block {
+  padding-top: 40px;
+}
+
+// Signal block: what you owe, where to send it.
+.share-block {
+  grid-column: 9 / -1;
+  grid-row: 1 / span 2;
+  position: sticky;
+  top: calc(var(--header-h) + 24px);
+  margin-top: 32px;
+  padding: 24px;
+  background: var(--accent);
+
+  .label {
+    color: var(--ink);
+  }
+}
+
+.share-amount {
+  margin-top: 12px;
+  font-size: clamp(64px, 7vw, 120px);
+  font-weight: 800;
+  line-height: 0.85;
+}
+
+.share-unit {
+  margin-top: 8px;
+  font-weight: 600;
+}
+
+.accounts {
+  margin-top: 28px;
+  border-top: 2px solid var(--ink);
+}
+
+.account {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--ink);
+
+  dd {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 2px;
+  }
+
+  code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 14px;
+    word-break: break-all;
+  }
+}
+
+.no-details {
+  margin-top: 20px;
+  font-weight: 500;
+}
+
+// Order lines: quantity, drawing, description, people.
+.line {
+  display: grid;
+  grid-template-columns: 64px 52px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--rule-soft);
+}
+
+.qty {
+  font-size: 36px;
+  font-weight: 800;
+  line-height: 1;
+
+  small {
+    font-size: 18px;
+    color: var(--ink-2);
+  }
+}
+
+.line-desc {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.totals {
+  padding-top: 12px;
+
+  div {
+    display: flex;
+    justify-content: space-between;
+    padding: 3px 0;
+    color: var(--ink-2);
+  }
+
+  .grand {
+    align-items: baseline;
+    margin-top: 10px;
+    padding-top: 12px;
+    border-top: 2px solid var(--ink);
+    color: var(--ink);
+    font-weight: 700;
+
+    dd {
+      font-size: 44px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    small {
+      margin-left: 6px;
+      font-family: var(--font);
+      font-size: 15px;
+      letter-spacing: 0;
+    }
+  }
+}
+
+.call-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.call {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 18px;
+  background: var(--ink);
+  color: var(--paper);
+  text-decoration: none;
+
+  .label {
+    color: var(--paper);
+  }
+
+  .call-number {
+    flex: 1;
+    font-size: 22px;
+    font-weight: 700;
+  }
+
+  &:hover {
+    background: #2a2a2a;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+// People: name and status, their items, amount on the right edge.
+.person {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) auto;
+  align-items: start;
+  gap: 8px 24px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--rule-soft);
+}
+
+.person-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+
+  .name {
+    font-weight: 700;
+  }
+
+  .you {
+    font-weight: 500;
+  }
+}
+
+.items {
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
+}
 
-  .actions {
-    margin-bottom: 10px;
-    display: flex;
-    flex-direction: row; /* Align elements in a row */
-    justify-content: space-between; /* Space between elements */
-    align-items: center; /* Align items vertically */
-    gap: 10px; /* Add spacing between child elements */
+.item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 32px;
+  font-size: 14px;
+  color: var(--ink-2);
 
-    p,
-    i {
-      text-align: center;
-      color: #4caf50;
-      font-weight: bold;
-      margin: 0;
-    }
-
-    i:hover {
-      cursor: pointer;
-      color: #388e3c;
-    }
-
-    .contact-info {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      gap: 5px;
-    }
+  .added-by {
+    font-style: italic;
   }
 
-  .back-link {
-    font-size: 14px;
-    color: #007bff;
-    text-decoration: none;
-    font-weight: 600;
-    transition: color 0.3s ease, transform 0.3s ease;
-    cursor: pointer;
-    width: fit-content;
+  .icon-btn {
+    width: 28px;
+    height: 28px;
+    margin-left: auto;
+  }
+}
+
+.amount {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: right;
+}
+
+.paid-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border: 1px solid var(--ink);
+  background: transparent;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--paper-2);
   }
 
-  .leave-group-btn {
-    background-color: #dc3545;
+  &[aria-pressed="true"] {
+    border-color: var(--success);
+    background: var(--success);
     color: #fff;
-    border: none;
-    border-radius: 5px;
-    padding: 0.5rem 1rem;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: bold;
-    transition: background-color 0.3s ease;
   }
 
-  .leave-group-btn:hover {
-    background-color: #c82333;
-  }
-
-  .back-link:hover {
-    color: #0056b3;
-    transform: translateY(-2px);
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
   }
 }
 
-.container {
-  width: 80%;
-  margin: 0 auto;
-  padding-top: 10px;
-  .no-orders-message {
-    text-align: center;
-    background-color: #f8d7da;
-    color: #721c24;
-    padding: 20px;
-    border-radius: 5px;
-    margin: 20px auto;
-    .no-orders-message h3 {
-      font-size: 24px;
-      margin-bottom: 10px;
+.empty {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--gap);
+  align-items: end;
+  padding: 40px 0;
+}
+
+.empty-number {
+  grid-column: 1 / span 3;
+  font-size: clamp(140px, 20vw, 320px);
+  font-weight: 800;
+  line-height: 0.78;
+  color: var(--accent);
+}
+
+.empty-copy {
+  grid-column: 4 / span 6;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+@media (max-width: 900px) {
+  .order-block,
+  .people-block,
+  .share-block,
+  .empty-number,
+  .empty-copy {
+    grid-column: 1 / -1;
+  }
+
+  // Phones: what you owe and where to send it comes first.
+  .share-block {
+    grid-row: auto;
+    order: -1;
+    position: static;
+    margin: 24px 0 8px;
+  }
+
+  .line {
+    grid-template-columns: 44px 40px minmax(0, 1fr);
+    gap: 12px;
+
+    .avatar-stack {
+      grid-column: 3;
     }
   }
 
-  .total-price-box {
-    background-color: #f9f9f9;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    padding: 20px 25px;
-    margin: 20px auto;
-    text-align: center;
-    width: fit-content;
-    font-family: Arial, sans-serif;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+  .qty {
+    font-size: 26px;
   }
 
-  .total-content h4 {
-    font-size: 18px;
-    font-weight: bold;
-    color: #333;
-    margin-bottom: 8px;
-  }
+  .person {
+    grid-template-columns: minmax(0, 1fr) auto;
 
-  .total-content p,
-  .total-content i {
-    font-size: 22px;
-    color: #4caf50;
-    font-weight: bold;
-    margin: 0;
-  }
+    .items {
+      grid-column: 1 / -1;
+      grid-row: 2;
+    }
 
-  .total-content i:hover {
-    cursor: pointer;
-    color: #388e3c;
-  }
-}
-
-@media (max-width: 768px) {
-  .container {
-    width: 100%;
-    padding: 25px;
-  }
-  .total-price-box {
-    width: 90%;
+    .amount {
+      grid-column: 2;
+      grid-row: 1;
+    }
   }
 }

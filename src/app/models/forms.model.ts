@@ -2,10 +2,9 @@ import { FormControl } from '@angular/forms';
 
 export interface OrderForm {
   size: FormControl<MultiselectOption | null | undefined>;
-  useLastOrder: FormControl<boolean | null>;
   restrictions: FormControl<MultiselectOption[] | null | undefined>;
   adjustments: FormControl<MultiselectOption[] | null | undefined>;
-  withEverything: FormControl<boolean | null | undefined>;
+  orderedFor: FormControl<string | null>;
 }
 
 export interface MultiselectOption {

@@ -10,7 +10,7 @@ import { definePreset } from '@primeng/themes';
 import Aura from '@primeng/themes/aura';
 import { firebaseConfig } from '../../environment';
 import { getFirestore, provideFirestore } from '@angular/fire/firestore';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { ConfirmationService } from 'primeng/api';
 import { provideToastr } from 'ngx-toastr';
 import { provideAnimations } from '@angular/platform-browser/animations';
 
@@ -57,7 +57,6 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideAnimations(),
     ConfirmationService,
-    MessageService,
     provideToastr({
       timeOut: 5000,
       positionClass: 'toast-top-center',

@@ -1,28 +1,20 @@
-/* tslint:disable:no-unused-variable */
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-import { By } from '@angular/platform-browser';
-import { DebugElement } from '@angular/core';
-
+import { Order } from '../../models';
 import { OrdersSummaryComponent } from './orders-summary.component';
 
-describe('OrdersSummaryComponent', () => {
-  let component: OrdersSummaryComponent;
-  let fixture: ComponentFixture<OrdersSummaryComponent>;
+describe('OrdersSummaryComponent.groupByPerson', () => {
+  const item = (orderedBy: string, price: number, orderedFor: string | null = null) =>
+    ({ orderedBy, orderedFor, photoUrl: null, productDetails: { price } } as Order);
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
-      declarations: [ OrdersSummaryComponent ]
-    })
-    .compileComponents();
-  }));
+  it('groups items by who they are for and splits delivery per item', () => {
+    const people = OrdersSummaryComponent.prototype.groupByPerson.call(
+      { deliveryPrice: 4 },
+      [item('Sandro', 10), item('Sandro', 12, 'Nika'), item('Sandro', 10), item('Ana', 8)]
+    );
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(OrdersSummaryComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
-
-  it('should create', () => {
-    expect(component).toBeTruthy();
+    expect(people.map((p) => [p.name, p.items.length, p.total])).toEqual([
+      ['Sandro', 2, 22],
+      ['Nika', 1, 13],
+      ['Ana', 1, 9],
+    ]);
   });
 });

@@ -1,3 +1,3 @@
 export * from './header/header.component';
-export * from './order-card/order-card.component';
-export * from './previous-order-modal/previous-order-modal.component';
+export * from './ingredient-icon/ingredient-icon.component';
+export * from './shawarma-graphic/shawarma-graphic.component';
