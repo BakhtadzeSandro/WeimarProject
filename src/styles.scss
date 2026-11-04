@@ -1,12 +1,503 @@
 @import "primeicons/primeicons.css";
-* {
+@import "primeflex/primeflex.css";
+
+// Swiss-style tokens: paper, ink and one signal colour. Flat: no radii, no shadows.
+// PrimeNG gets the same values through the preset in app.config.ts.
+:root {
+  --paper: #f4f2ed;
+  --paper-2: #e9e6de;
+  --ink: #111111;
+  --ink-2: #55534e;
+  --ink-3: #8c8981; // decorative / large text only
+  --rule-soft: #d6d2c8;
+  --accent: #ff3b00; // always carries ink text; white on it is too low-contrast
+  --accent-ink: #b32900; // accent for small text on paper
+  --success: #17803d;
+  --danger: #c4161c;
+
+  --gutter: clamp(16px, 3vw, 40px);
+  --gap: clamp(12px, 1.6vw, 28px);
+  --header-h: 64px;
+
+  --font: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-display: "Inter Tight", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande",
-    "Lucida Sans", Arial, sans-serif;
 }
 
 html,
 body {
   height: 100%;
+}
+
+body {
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--paper);
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+ul,
+ol {
+  list-style: none;
+}
+
+// Grid: the header and every page share these gutters and 12 columns, so edges line up.
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--gap);
+}
+
+.page {
+  padding: 40px var(--gutter) 96px;
+}
+
+// Type
+
+.display {
+  font-family: var(--font-display);
+  font-size: clamp(44px, 6.6vw, 112px);
+  font-weight: 800;
+  line-height: 0.92;
+  letter-spacing: -0.045em;
+}
+
+.h2 {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.num {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+}
+
+.muted {
+  color: var(--ink-2);
+}
+
+.money {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+// Page head: label in columns 1–3, headline from column 4 (the header's date column).
+
+.page-head {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--gap);
+  row-gap: 20px;
+  padding-bottom: 28px;
+  border-bottom: 2px solid var(--ink);
+
+  .page-label {
+    grid-column: 1 / span 3;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding-top: 8px;
+  }
+
+  .display {
+    grid-column: 4 / -1;
+  }
+
+  .page-meta {
+    grid-column: 4 / span 5;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 18px;
+    color: var(--ink-2);
+  }
+
+  .page-actions {
+    grid-column: 9 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-self: end;
+    gap: 8px;
+  }
+}
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 16px 0 14px;
+  border-bottom: 1px solid var(--ink);
+
+  .section-no {
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--accent-ink);
+  }
+
+  .h2 {
+    flex: 1;
+  }
+}
+
+// Pieces
+
+.avatar {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  object-fit: cover;
+  background: var(--paper-2);
+  filter: grayscale(1) contrast(1.05);
+}
+
+.avatar-lg {
+  width: 44px;
+  height: 44px;
+}
+
+.avatar-stack {
+  display: flex;
+  align-items: center;
+
+  .avatar {
+    margin-left: -4px;
+    outline: 2px solid var(--paper);
+
+    &:first-child {
+      margin-left: 0;
+    }
+  }
+
+  .more {
+    margin-left: 8px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border: 1px solid currentColor;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+
+  .pi {
+    font-size: 10px;
+  }
+}
+
+.tag-accent {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--ink);
+}
+
+.tag-ink {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.tag-success {
+  color: var(--success);
+}
+
+.tag-warning {
+  color: var(--accent-ink);
+}
+
+// Full-bleed signal strip, e.g. "ordered, closed for changes".
+.banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  margin: 0 calc(-1 * var(--gutter));
+  padding: 14px var(--gutter);
+  background: var(--accent);
+  font-weight: 600;
+}
+
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border: 1px solid transparent;
+  background: none;
+  cursor: pointer;
+
+  &:hover {
+    border-color: currentColor;
+  }
+
+  &.danger:hover {
+    color: var(--danger);
+  }
+}
+
+.text-link,
+.back-link {
+  border: 0;
+  background: none;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--accent-ink);
+  }
+}
+
+.text-link {
+  text-align: left;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+// Toggles. State lives in aria-pressed so screen readers announce it too.
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px 7px 9px;
+  border: 1px solid var(--ink);
+  background: transparent;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.12s, color 0.12s;
+
+  &:hover {
+    background: var(--paper-2);
+  }
+
+  &[aria-pressed="true"] {
+    background: var(--accent);
+  }
+}
+
+// 1px ink grid lines between tiles, drawn by the gap over an ink background.
+.tiles {
+  display: grid;
+  gap: 1px;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 20px;
+  min-height: 112px;
+  padding: 14px 16px;
+  border: 0;
+  background: var(--paper);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.12s, color 0.12s;
+
+  .tile-title {
+    font-family: var(--font-display);
+    font-size: clamp(20px, 2vw, 30px);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+
+  .tile-sub {
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &:hover {
+    background: var(--paper-2);
+  }
+
+  &[aria-pressed="true"] {
+    background: var(--ink);
+    color: var(--paper);
+
+    .tile-sub {
+      color: var(--accent);
+    }
+  }
+}
+
+.chip,
+.tile,
+.icon-btn,
+.text-link,
+.back-link {
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+// Loading placeholders: flat paper blocks that pulse, sized like what replaces them.
+
+.skeleton {
+  display: block;
+  background: var(--paper-2);
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+.skeleton-text {
+  display: inline-block;
+  height: 0.9em;
+  vertical-align: middle;
+}
+
+@keyframes skeleton-pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+// PrimeNG adjustments the preset can't express
+
+.p-button {
+  font-weight: 600;
+}
+
+.p-button.p-button-secondary.p-button-outlined {
+  border-color: var(--ink);
+  background: transparent;
+  color: var(--ink);
+
+  &:not(:disabled):hover {
+    background: var(--ink);
+    color: var(--paper);
+  }
+}
+
+.p-button.cta {
+  justify-content: space-between;
+  padding: 20px 22px;
+  font-family: var(--font-display);
+  font-size: 20px;
+  letter-spacing: -0.02em;
+}
+
+// ngx-toastr, flat
+
+#toast-container > div {
+  border-left: 6px solid var(--ink-3);
+  border-radius: 0;
+  background-color: var(--ink);
+  box-shadow: none;
+  color: var(--paper);
+  font-family: var(--font);
+  opacity: 1;
+
+  &:hover {
+    box-shadow: none;
+  }
+
+  &.toast-success {
+    border-left-color: #3ccf6e;
+  }
+
+  &.toast-error {
+    border-left-color: var(--accent);
+  }
+
+  &.toast-warning {
+    border-left-color: #ffc400;
+  }
+}
+
+@media (max-width: 900px) {
+  .page {
+    padding-top: 24px;
+  }
+
+  .page-head > * {
+    grid-column: 1 / -1 !important;
+  }
+
+  .page-head .page-actions {
+    justify-content: flex-start;
+  }
+}
+
+// History drawer: wider than PrimeNG's default and on paper like the pages.
+.p-drawer.history-drawer {
+  width: min(420px, 100vw);
+  border-right: 2px solid var(--ink);
+  background: var(--paper);
 }
