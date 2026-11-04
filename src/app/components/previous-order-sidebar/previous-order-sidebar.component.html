@@ -1,42 +1,72 @@
-<p-sidebar
+<p-drawer
   [(visible)]="sidebarDisplayed"
-  [dismissible]="false"
+  [dismissible]="true"
   (visibleChange)="onHide()"
+  styleClass="history-drawer"
 >
-  <div class="sidebar-content">
-    <h3>Previous Orders</h3>
-    @for (prevOrder of previousOrderIds; track $index) {
-    <div class="order-item">
-      <div class="order-header" (click)="toggleOrderDetails(prevOrder)">
-        <p>{{ prevOrder }}</p>
-        <i
-          class="pi"
-          [ngClass]="{
-            'pi-angle-down': !isOrderDetailsVisible(prevOrder),
-            'pi-angle-up': isOrderDetailsVisible(prevOrder)
-          }"
-        ></i>
-      </div>
-      @if(isOrderDetailsVisible(prevOrder)){
-      <div class="order-details">
-        @if(previousGroupCreators){ @for(creator of
-        previousGroupCreators[prevOrder]; track $index){
-        <p class="group-name" (click)="clickOrderGroup(creator, prevOrder)">
-          {{ creator.name + "'s group" }}
-        </p>
-        } }
-      </div>
-      }
-    </div>
-    <p-divider />
-    } @if(hasMoreOrders){
-    <div class="load-more-container">
-      <p-button
-        label="Load More"
-        class="load-more-btn"
-        (click)="loadMoreOrders()"
-      ></p-button>
-    </div>
+  <div class="history">
+    <span class="label">Archive</span>
+    <h2 class="h2">Past orders</h2>
+    <ol class="days">
+      @for (day of previousOrderIds; track day) {
+      <li class="day">
+        <button
+          type="button"
+          class="day-header"
+          [attr.aria-expanded]="isOrderDetailsVisible(day)"
+          (click)="toggleOrderDetails(day)"
+        >
+          <span class="day-date num">{{ toDate(day) | date : "dd.MM" }}</span>
+          <span class="day-name">{{ toDate(day) | date : "EEEE" }}</span>
+          <span class="label">
+            {{ previousOrders?.[day]?.length }}
+            {{ previousOrders?.[day]?.length === 1 ? "group" : "groups" }}
+          </span>
+          <i
+            class="pi"
+            [ngClass]="isOrderDetailsVisible(day) ? 'pi-minus' : 'pi-plus'"
+          ></i>
+        </button>
+        @if (isOrderDetailsVisible(day)) {
+        <div class="day-groups">
+          @if (!previousGroupCreators?.[day]) { @for (i of [1, 2]; track i) {
+          <span class="skeleton group-skeleton" aria-hidden="true"></span>
+          } }
+          @for (creator of previousGroupCreators?.[day]; track $index) { @if
+          (creator) {
+          <button
+            type="button"
+            class="group-link"
+            (click)="clickOrderGroup(creator, day)"
+          >
+            <img class="avatar" [src]="creator.photoUrl" alt="" referrerpolicy="no-referrer" />
+            <span>{{ creator.name }}'s group</span>
+            <i class="pi pi-arrow-right"></i>
+          </button>
+          } }
+        </div>
+        }
+      </li>
+      } @empty { @if (loading) {
+      <li class="sr-only" role="status">Loading past orders</li>
+      @for (i of [1, 2, 3, 4, 5]; track i) {
+      <li class="day day-skeleton" aria-hidden="true">
+        <span class="skeleton" style="width: 52px; height: 24px"></span>
+        <span class="skeleton" style="width: 90px; height: 16px"></span>
+      </li>
+      } } @else {
+      <li class="muted empty">No past orders yet.</li>
+      } }
+    </ol>
+    @if (hasMoreOrders && previousOrderIds.length) {
+    <p-button
+      label="Load more"
+      severity="secondary"
+      [outlined]="true"
+      [fluid]="true"
+      [loading]="loading"
+      (onClick)="loadMoreOrders()"
+    />
     }
   </div>
-</p-sidebar>
+</p-drawer>

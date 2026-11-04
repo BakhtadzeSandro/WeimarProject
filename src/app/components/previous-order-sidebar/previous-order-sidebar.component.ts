@@ -11,16 +11,18 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { DividerModule } from 'primeng/divider';
-import { SidebarModule } from 'primeng/sidebar';
+import { DrawerModule } from 'primeng/drawer';
 import { FirestoreUser } from '../../models';
 import { OrderService, UsersService } from '../../services';
+import { docNameToDate } from '../../utils/date.utils';
+import { groupCreatorIds } from '../../utils/order.utils';
 
 @Component({
   selector: 'app-previous-order-sidebar',
   standalone: true,
   imports: [
     FormsModule,
-    SidebarModule,
+    DrawerModule,
     ButtonModule,
     DividerModule,
     CommonModule,
@@ -38,12 +40,14 @@ export class PreviousOrderSidebarComponent implements OnChanges {
   private userService = inject(UsersService);
   private router = inject(Router);
   previousOrders: { [key: string]: string[] } | undefined;
-  previousGroupCreators: { [key: string]: FirestoreUser[] } | undefined;
+  previousGroupCreators: { [key: string]: (FirestoreUser | null)[] } | undefined;
   previousOrderIds: string[] = [];
   visibleOrderDetails: string[] = [];
   lastDocId: string | null = null;
   sidebarDisplayed = false;
   hasMoreOrders = true;
+  loading = false;
+  toDate = docNameToDate;
 
   clickOrderGroup(orderCreator: FirestoreUser, date: string | null = null) {
     if (!date) {
@@ -63,32 +67,9 @@ export class PreviousOrderSidebarComponent implements OnChanges {
   }
 
   displaySidebar() {
-    this.orderService
-      .retrieveOrdersForPagination()
-      .then(({ docs, lastDocId }) => {
-        this.previousOrderIds = docs
-          .map((doc) => {
-            if (
-              Object.keys(doc.data()).filter((key) => key !== 'createdAt')
-                .length > 0
-            ) {
-              return doc.id;
-            }
-            return '';
-          })
-          .filter((id) => id !== '');
-
-        docs.forEach((doc) => {
-          this.previousOrders = {
-            ...this.previousOrders,
-            [doc.id]: Object.keys(doc.data()).filter(
-              (key) => key !== 'createdAt'
-            ),
-          };
-        });
-
-        this.lastDocId = lastDocId;
-      });
+    this.previousOrderIds = [];
+    this.lastDocId = null;
+    this.loadMoreOrders();
   }
 
   isOrderDetailsVisible(orderId: string): boolean {
@@ -115,32 +96,28 @@ export class PreviousOrderSidebarComponent implements OnChanges {
     ).then((response) => {
       this.previousGroupCreators = {
         ...this.previousGroupCreators,
-        [date]: response as FirestoreUser[],
+        [date]: response,
       };
     });
   }
 
   loadMoreOrders() {
+    this.loading = true;
     this.orderService
       .retrieveOrdersForPagination(this.lastDocId)
       .then(({ docs, lastDocId }) => {
-        this.previousOrderIds = [
-          ...this.previousOrderIds,
-          ...docs.map((doc) => doc.id),
-        ];
-
         docs.forEach((doc) => {
-          this.previousOrders = {
-            ...this.previousOrders,
-            [doc.id]: Object.keys(doc.data()).filter(
-              (key) => key !== 'createdAt'
-            ),
-          };
+          const creatorIds = groupCreatorIds(doc.data());
+          if (!creatorIds.length) return;
+
+          this.previousOrderIds = [...this.previousOrderIds, doc.id];
+          this.previousOrders = { ...this.previousOrders, [doc.id]: creatorIds };
         });
 
         this.lastDocId = lastDocId;
         this.hasMoreOrders = docs.length === 10;
-      });
+      })
+      .finally(() => (this.loading = false));
   }
 
   onHide() {
