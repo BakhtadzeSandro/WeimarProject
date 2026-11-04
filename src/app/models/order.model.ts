@@ -37,7 +37,10 @@ export interface productDetails {
 
 export interface Order {
   id?: string | null | undefined;
+  userId?: string;
   orderedBy: string | null | undefined;
+  orderedFor?: string | null;
+  paid?: boolean;
   photoUrl: string | null | undefined;
   productDetails: productDetails;
 }
