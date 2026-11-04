@@ -1,5 +1,7 @@
 <div class="popup">
-  <p>Provide account number or personal before creating group</p>
+  <p class="muted">
+    People in your group will see this, so they can send you their share.
+  </p>
   <form [formGroup]="orderForm()">
     <div>
       <p-select
@@ -8,8 +10,8 @@
         [options]="bankOptions"
         appendTo="body"
         optionLabel="label"
-        placeholder="Choose bank or personal number"
-        styleClass="w-full md:w-80 mt-3"
+        placeholder="Bank or personal number"
+        styleClass="w-full"
       />
     </div>
 
@@ -42,7 +44,12 @@
     </div>
   </form>
   <div class="popup-buttons">
-    <p-button label="Submit" (onClick)="submitForm()"></p-button>
-    <p-button label="Cancel" severity="secondary"></p-button>
+    <p-button
+      label="Cancel"
+      severity="secondary"
+      [text]="true"
+      (onClick)="cancel.emit()"
+    ></p-button>
+    <p-button label="Save and start group" (onClick)="submitForm()"></p-button>
   </div>
 </div>
