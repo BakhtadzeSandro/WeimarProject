@@ -1,4 +1,8 @@
 <app-header></app-header>
-<div class="content">
+@if (navigating()) {
+<div class="route-progress" role="progressbar" aria-label="Loading page"></div>
+}
+<main class="content">
   <router-outlet></router-outlet>
-</div>
+</main>
+<p-confirmdialog [style]="{ width: '26rem' }" [breakpoints]="{ '576px': '92vw' }" />
