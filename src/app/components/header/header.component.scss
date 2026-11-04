@@ -1,86 +1,95 @@
-.container {
-  display: flex;
-  justify-content: space-between;
+// Sticky on the host: the header is the only thing inside it, so sticking the inner element wouldn't work.
+:host {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: block;
+}
+
+// Same 12 columns and gutters as .page-head, so the date lines up with every page headline.
+.app-header {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--gap);
   align-items: center;
-  background-color: rgb(194, 243, 227);
-  padding: 10px 25px;
-  width: 100%;
+  height: var(--header-h);
+  padding: 0 var(--gutter);
+  border-bottom: 2px solid var(--ink);
+  background: var(--paper);
+}
 
-  .left {
-    flex: 1;
-    display: flex;
-    align-items: center;
+.brand {
+  grid-column: 1 / span 3;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.brand-mark {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  background: var(--accent);
+}
+
+.brand-word {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
+.brand-sub,
+.header-date {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.brand-sub {
+  margin-top: 3px;
+}
+
+.header-date {
+  grid-column: 4 / span 5;
+  font-variant-numeric: tabular-nums;
+}
+
+.user {
+  grid-column: 9 / -1;
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  .name {
+    font-size: 14px;
+    font-weight: 600;
   }
 
-  .right {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
+  .text-link {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 900px) {
+  .header-date,
+  .brand-sub,
+  .user .name {
+    display: none;
   }
 
-  .header {
-    flex: 0 1 auto;
-    font-size: 32px;
-    text-align: center;
+  .brand {
+    grid-column: 1 / span 6;
   }
 
   .user {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-
-    .name {
-      font-size: 20px;
-    }
-
-    .photo img {
-      width: 70px;
-      height: 70px;
-      border-radius: 50%;
-    }
-  }
-
-  .logout {
-    font-size: 18px;
-    color: #3b82f6;
-    background-color: transparent;
-    border: 2px solid #3b82f6;
-    border-radius: 8px;
-    padding: 8px 16px;
-    cursor: pointer;
-    text-transform: uppercase;
-    font-weight: bold;
-    transition: all 0.3s ease-in-out;
-
-    &:hover {
-      background-color: #3b82f6;
-      color: #fff;
-      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-    }
-
-    &:active {
-      transform: scale(0.95);
-    }
-  }
-}
-
-.overlay {
-  background-color: rgb(224, 221, 221);
-  height: 80px;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  width: fit-content;
-  position: relative;
-  left: 10px;
-  padding: 10px;
-  border-radius: 8px;
-  font-size: 15px;
-}
-
-@media (max-width: 768px) {
-  .container {
-    gap: 20px;
+    grid-column: 7 / -1;
   }
 }
