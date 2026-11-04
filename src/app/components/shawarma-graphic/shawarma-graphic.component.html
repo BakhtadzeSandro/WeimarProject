@@ -1,0 +1,63 @@
+<div class="canvas">
+  <svg class="art" [attr.viewBox]="viewBox()" role="img" [attr.aria-label]="label()">
+    <g class="body" [style.transform]="'translateX(var(--shift, 0px)) scale(' + scale() + ')'">
+      <!-- Back to front: lavash, the layered fillings, then the paper wrap and the labels. -->
+      <path
+        class="lavash"
+        d="M60 50Q60 38 70 40Q80 32 92 38Q104 32 116 38Q128 33 140 42V180Q140 196 100 196Q60 196 60 180Z"
+      />
+      <rect class="well" x="66" y="44" width="68" height="136" />
+
+      @for (band of bands(); track band.id) {
+      <g
+        class="band"
+        [style.transform]="'translateY(' + band.y + 'px)'"
+        [style.opacity]="band.h ? 1 : 0"
+      >
+        <rect
+          class="band-fill"
+          x="66"
+          y="0"
+          width="68"
+          height="1"
+          [attr.fill]="band.fill"
+          [style.transform]="'scaleY(' + band.h + ')'"
+        />
+        @for (spot of band.spots; track $index) {
+        <g class="spot" [style.transform]="spot">
+          @for (part of band.icon; track $index) { @if (part.text) {
+          <text x="12" y="16.5" text-anchor="middle" [attr.fill]="part.fill">{{ part.text }}</text>
+          } @else {
+          <path
+            [attr.d]="part.d"
+            [attr.fill]="part.fill ?? 'none'"
+            [attr.stroke]="part.stroke ?? 'none'"
+            [attr.stroke-width]="part.sw ?? 1.5"
+            [attr.transform]="part.transform ?? null"
+          />
+          } }
+        </g>
+        }
+        <path class="band-edge" d="M66 0h68" />
+      </g>
+      }
+
+      <rect class="well-edge" x="66" y="44" width="68" height="136" />
+      <path class="paper" d="M54 160L146 148V184Q146 199 100 199Q54 199 54 184Z" />
+      <path class="fold" d="M54 160L114 199" />
+      <path class="fold" d="M146 166L128 199" />
+
+      @for (callout of callouts(); track callout.id) {
+      <g class="callout">
+        <path class="leader" [attr.d]="callout.leader" />
+        <text x="155" [attr.y]="callout.y + 2.8">
+          <tspan class="callout-name">{{ callout.name }}</tspan>
+          @if (callout.state) {
+          <tspan class="callout-state" dx="3">{{ callout.state }}</tspan>
+          }
+        </text>
+      </g>
+      }
+    </g>
+  </svg>
+</div>

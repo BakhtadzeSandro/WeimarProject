@@ -1,5 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  inject,
+  OnInit,
+  Output,
+  signal,
+} from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -15,7 +22,7 @@ import { MessageModule } from 'primeng/message';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { Select } from 'primeng/select';
 import { TextareaModule } from 'primeng/textarea';
-import { of, switchMap } from 'rxjs';
+import { of, switchMap, take } from 'rxjs';
 import { BankOptions } from '../../models';
 import {
   AccountNumberForm,
@@ -44,6 +51,8 @@ import { AuthService, OrderService, UsersService } from '../../services';
   styleUrl: './account-number-pop-up.component.scss',
 })
 export class AccountNumberPopUpComponent implements OnInit {
+  @Output() cancel = new EventEmitter<void>();
+
   bankOptions: SingleSelectOption[] = [];
 
   private userService = inject(UsersService);
@@ -86,6 +95,7 @@ export class AccountNumberPopUpComponent implements OnInit {
         this.authService
           .getCurrentUser()
           .pipe(
+            take(1),
             switchMap((user) => {
               this.userService.updateUser(user?.uid ?? '', {
                 personalNumber: this.orderForm().get('personalNumber')?.value,
@@ -115,6 +125,7 @@ export class AccountNumberPopUpComponent implements OnInit {
       this.authService
         .getCurrentUser()
         .pipe(
+          take(1),
           switchMap((user) => {
             this.userService.updateUser(user?.uid ?? '', {
               [this.orderForm().get('bank')?.value?.value === 'BOG'

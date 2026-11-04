@@ -6,12 +6,21 @@ import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { of } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { switchMap, take } from 'rxjs/operators';
 import { AccountNumberPopUpComponent } from '../../components/account-number-pop-up/account-number-pop-up.component';
 import { PreviousOrderSidebarComponent } from '../../components/previous-order-sidebar/previous-order-sidebar.component';
-import { FirestoreUser } from '../../models/index';
+import { FirestoreUser, Order } from '../../models/index';
 import { AuthService, OrderService, UsersService } from '../../services/index';
 import { formatDateToDocName } from '../../utils/date.utils';
+import { firstName, groupCreatorIds } from '../../utils/order.utils';
+
+interface GroupCard {
+  creator: FirestoreUser;
+  items: number;
+  photos: string[];
+  joined: boolean;
+  ordered: boolean;
+}
 
 @Component({
   selector: 'app-all-orders',
@@ -33,40 +42,56 @@ export class AllOrdersComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private userService = inject(UsersService);
   private router = inject(Router);
-  orderCreators: FirestoreUser[] = [];
-  orderCreatorsIds: string[] | undefined;
-  previousOrders: { [key: string]: string[] } | undefined;
-  previousGroupCreators: { [key: string]: FirestoreUser[] } | undefined;
-  previousOrderIds: string[] = [];
-  visibleOrderDetails: string[] = [];
-  lastDocId: string | null = null;
+  groups: GroupCard[] = [];
+  loaded = false;
+  currentUserId: string | undefined;
+  today = new Date();
   sidebarDisplayed = false;
-  hasMoreOrders = true;
   showAccountNumberPop = false;
   unsub: Unsubscribe | undefined;
+  firstName = firstName;
 
   constructor() {}
 
-  clickOrderGroup(orderCreator: FirestoreUser) {
+  get totalItems() {
+    return this.groups.reduce((sum, group) => sum + group.items, 0);
+  }
+
+  get hasOwnGroup() {
+    return this.groups.some((group) => group.creator.id === this.currentUserId);
+  }
+
+  openOwnGroup() {
+    this.router.navigate([`order/${this.currentUserId}/summary`]);
+  }
+
+  // Members, the creator, and anyone once the group is closed go to the summary; others to the order form.
+  clickOrderGroup({ creator, ordered }: GroupCard) {
+    if (ordered || creator.id === this.currentUserId) {
+      this.router.navigate([`order/${creator.id}/summary`]);
+      return;
+    }
+
     this.authService
       .getCurrentUser()
       .pipe(
+        take(1),
         switchMap((val) => {
           if (!val) return of(null);
 
           return this.orderService.isUserInOrderGroup(
             formatDateToDocName(),
-            orderCreator.id,
-            val.displayName ?? ''
+            creator.id,
+            val
           );
         })
       )
       .subscribe((isInOrder) => {
         if (isInOrder) {
-          this.router.navigate(['order/' + orderCreator.id + '/summary']);
+          this.router.navigate(['order/' + creator.id + '/summary']);
           return;
         }
-        this.router.navigate(['order/' + orderCreator.id]);
+        this.router.navigate(['order/' + creator.id]);
       });
   }
 
@@ -78,6 +103,7 @@ export class AllOrdersComponent implements OnInit, OnDestroy {
     return this.authService
       .getCurrentUser()
       .pipe(
+        take(1),
         switchMap((val) => {
           if (!val) return of(null);
 
@@ -106,20 +132,29 @@ export class AllOrdersComponent implements OnInit, OnDestroy {
       this.unsub = this.orderService.listenToOrderUpdates(
         formatDateToDocName(date),
         (doc) => {
-          if (doc.exists()) {
-            this.orderCreatorsIds = Object.keys(doc.data());
+          const day = doc.data();
 
-            const creatorPromises = this.orderCreatorsIds.map((id) =>
-              this.userService.getUserWithId(id)
-            );
-            Promise.all(creatorPromises).then((creators) => {
-              this.orderCreators = creators.filter(
-                (creator) => creator !== undefined && creator !== null
-              ) as FirestoreUser[];
-            });
-          } else {
-            this.orderCreators = [];
-          }
+          Promise.all(
+            groupCreatorIds(day).map((id) => this.userService.getUserWithId(id))
+          ).then((creators) => {
+            this.groups = creators
+              .filter((creator): creator is FirestoreUser => !!creator)
+              .map((creator) => {
+                const orders: Order[] = day?.[creator.id] ?? [];
+                return {
+                  creator,
+                  items: orders.length,
+                  photos: [
+                    ...new Set(orders.map((order) => order.photoUrl ?? '')),
+                  ].filter(Boolean),
+                  joined: orders.some(
+                    (order) => order.userId === this.currentUserId
+                  ),
+                  ordered: !!day?.['orderedGroups']?.[creator.id],
+                };
+              });
+            this.loaded = true;
+          });
         }
       );
     } catch (error) {
@@ -128,7 +163,13 @@ export class AllOrdersComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.getCreators(new Date());
+    this.authService
+      .getCurrentUser()
+      .pipe(take(1))
+      .subscribe((user) => {
+        this.currentUserId = user?.uid;
+        this.getCreators(new Date());
+      });
   }
 
   ngOnDestroy() {

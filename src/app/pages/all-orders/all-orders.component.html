@@ -1,34 +1,128 @@
-<div class="order-groups-container">
+<div class="page">
   <app-previous-order-sidebar
     [(sidebarVisible)]="sidebarDisplayed"
   ></app-previous-order-sidebar>
-  <p-button
-    type="text"
-    (click)="displaySidebar()"
-    label="See previous orders"
-  ></p-button>
 
-  <h1 class="mt-3">Order Groups</h1>
-  <div class="order-groups">
-    @for(creator of orderCreators; track $index) {
-    <div class="order-group" (click)="clickOrderGroup(creator)">
-      <div class="creator-info">
-        <div class="photo">
-          <img [src]="creator.photoUrl" alt="Creator Photo" />
-        </div>
-        <p class="name">{{ creator.name }} and friends</p>
-      </div>
+  <header class="page-head">
+    <div class="page-label">
+      <span class="label">Groups</span>
+      <span class="label">{{ today | date : "dd.MM.yyyy" }}</span>
     </div>
+    <h1 class="display">Who's ordering<br />lunch today?</h1>
+    <p class="page-meta">
+      @if (loaded) {
+      <span>{{ groups.length }} {{ groups.length === 1 ? "group" : "groups" }} open</span>
+      <span>{{ totalItems }} {{ totalItems === 1 ? "item" : "items" }} ordered</span>
+      } @else {
+      <span class="skeleton skeleton-text" style="width: 15em"></span>
+      }
+    </p>
+    <div class="page-actions">
+      <p-button
+        label="History"
+        icon="pi pi-history"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="displaySidebar()"
+      />
+      @if (!loaded) {
+      <span class="skeleton" style="width: 150px; height: 42px"></span>
+      } @else if (hasOwnGroup) {
+      <p-button
+        label="Open my group"
+        icon="pi pi-arrow-right"
+        iconPos="right"
+        (onClick)="openOwnGroup()"
+      />
+      } @else {
+      <p-button
+        label="Start a group"
+        icon="pi pi-plus"
+        (onClick)="createNewGroup()"
+      />
+      }
+    </div>
+  </header>
+
+  @if (!loaded) {
+  <ol class="groups" aria-busy="true">
+    <li class="sr-only" role="status">Loading today's groups</li>
+    @for (i of [1, 2, 3]; track i) {
+    <li class="group-row skeleton-row" aria-hidden="true">
+      <span class="row-no"><span class="skeleton" style="width: 1.3em; height: 0.8em"></span></span>
+      <span class="row-name">
+        <span class="skeleton" style="width: min(260px, 90%); height: 32px"></span>
+        <span class="skeleton" style="width: 120px; height: 20px"></span>
+      </span>
+      <span class="row-meta">
+        <span class="row-items"><span class="skeleton" style="width: 72px; height: 30px"></span></span>
+        <span class="avatar-stack"><span class="skeleton" style="width: 112px; height: 28px"></span></span>
+      </span>
+    </li>
     }
-  </div>
-  <div class="actions">
-    <button class="create-new" (click)="createNewGroup()">Create New</button>
-  </div>
+  </ol>
+  } @else if (!groups.length) {
+  <section class="empty">
+    <p class="empty-number num" aria-hidden="true">0</p>
+    <div class="empty-copy">
+      <h2 class="h2">No groups yet today.</h2>
+      <p class="muted">Start one and your coworkers can add their orders to it.</p>
+      <p-button
+        label="Start a group"
+        icon="pi pi-plus"
+        (onClick)="createNewGroup()"
+      />
+    </div>
+  </section>
+  } @else {
+  <ol class="groups">
+    @for (group of groups; track group.creator.id; let i = $index) {
+    <li>
+      <button type="button" class="group-row" (click)="clickOrderGroup(group)">
+        <span class="row-no num">{{ i + 1 | number : "2.0" }}</span>
+        <span class="row-name">
+          <span class="row-title">{{ firstName(group.creator.name) }}'s group</span>
+          <span class="row-tags">
+            @if (group.creator.id === currentUserId) {
+            <span class="tag">Your group</span>
+            } @else if (group.joined) {
+            <span class="tag">You're in</span>
+            } @if (group.ordered) {
+            <span class="tag tag-ink"><i class="pi pi-check"></i> Ordered</span>
+            } @else {
+            <span class="tag tag-accent">Open</span>
+            }
+          </span>
+        </span>
+        <span class="row-meta">
+          <span class="row-items">
+            <span class="num">{{ group.items }}</span>
+            {{ group.items === 1 ? "item" : "items" }}
+          </span>
+          <span class="avatar-stack">
+            @for (photo of group.photos.slice(0, 6); track photo) {
+            <img class="avatar" [src]="photo" alt="" referrerpolicy="no-referrer" />
+            } @if (group.photos.length > 6) {
+            <span class="more">+{{ group.photos.length - 6 }}</span>
+            }
+          </span>
+        </span>
+        <i class="pi pi-arrow-right row-arrow" aria-hidden="true"></i>
+      </button>
+    </li>
+    }
+  </ol>
+  }
 </div>
+
 <p-dialog
-  header="Help others give you your money"
+  header="Where should people send money?"
   [modal]="true"
   [(visible)]="showAccountNumberPop"
+  [style]="{ width: '30rem' }"
+  [breakpoints]="{ '576px': '92vw' }"
 >
-  <app-account-number-pop-up></app-account-number-pop-up>
+  <app-account-number-pop-up
+    (cancel)="showAccountNumberPop = false"
+  ></app-account-number-pop-up>
 </p-dialog>

@@ -1,35 +1,22 @@
-import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { Component, inject } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
-import { IftaLabelModule } from 'primeng/iftalabel';
-import { InputTextModule } from 'primeng/inputtext';
+import { ShawarmaGraphicComponent } from '../../components/shawarma-graphic/shawarma-graphic.component';
 import { AuthService } from '../../services/auth.service';
+import { DEMO_LAYERS } from '../../utils/graphic.utils';
 
 @Component({
   selector: 'app-login',
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss'],
   standalone: true,
-  imports: [
-    FormsModule,
-    CommonModule,
-    ReactiveFormsModule,
-    IftaLabelModule,
-    InputTextModule,
-    ButtonModule,
-    RouterModule,
-  ],
+  imports: [ButtonModule, ShawarmaGraphicComponent],
 })
-export class LoginComponent implements OnInit {
+export class LoginComponent {
   private authService = inject(AuthService);
 
-  constructor() {}
+  demoLayers = DEMO_LAYERS;
 
   signInWithGoogle() {
     this.authService.signInWithGoodle();
   }
-
-  ngOnInit() {}
 }

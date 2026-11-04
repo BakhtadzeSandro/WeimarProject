@@ -1,0 +1,135 @@
+:host {
+  display: block;
+}
+
+// Labelled drawings sit left of centre to leave room for the labels.
+:host(.callouts) {
+  --shift: -22px;
+}
+
+// Parents set --graphic-bg / --graphic-pad to put the drawing on a colour block.
+.canvas {
+  padding: var(--graphic-pad, 0);
+  background: var(--graphic-bg, transparent);
+}
+
+.art {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.body {
+  transform-origin: 100px 199px; // grows up from the bottom of the wrap
+  transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.lavash,
+.paper {
+  stroke: #111;
+  stroke-width: 2;
+}
+
+.lavash {
+  fill: #efd6a2;
+}
+
+.paper {
+  fill: #fffaf0;
+}
+
+.well {
+  fill: #5e2a12;
+}
+
+.well-edge,
+.fold,
+.leader {
+  fill: none;
+  stroke: #111;
+}
+
+.well-edge {
+  stroke-width: 1.5;
+}
+
+.fold {
+  stroke-width: 1.2;
+}
+
+.band,
+.band-fill,
+.spot {
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.2s;
+}
+
+.band-edge {
+  stroke: #111;
+  stroke-width: 0.8;
+}
+
+.spot text {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.leader {
+  stroke-width: 0.8;
+}
+
+.callout text {
+  fill: #111;
+  font-family: var(--font-display);
+}
+
+.callout-name {
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.callout-state {
+  font-size: 5.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+:host(.mini) {
+  .lavash,
+  .paper {
+    stroke-width: 4;
+  }
+
+  .well-edge,
+  .band-edge {
+    stroke-width: 2.5;
+  }
+
+  .fold {
+    display: none;
+  }
+}
+
+// Too small to read on phones: centre the roll and drop the labels.
+@media (max-width: 900px) {
+  :host(.callouts) {
+    --shift: 0px;
+  }
+
+  .callout {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .body,
+  .band,
+  .band-fill,
+  .spot {
+    transition: none;
+  }
+}

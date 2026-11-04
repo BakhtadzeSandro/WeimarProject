@@ -1,69 +1,302 @@
-<div class="check-last-orders">
-  <div class="actions">
-    @if (selectedDate?.toDateString() === today.toDateString()) {
-    <div class="back-link" (click)="backToOrderPage()">Back to Order Page</div>
-    <div class="contact-info">
-      <h4 class="mr-2">Weimar contact info:</h4>
-      <p>511 16 16 35</p>
-      <i class="pi pi-clone" (click)="copyToClipboard('511 16 16 35')"></i>
+<div class="page">
+  <header class="page-head">
+    <div class="page-label">
+      <button type="button" class="back-link" (click)="backToHomePage()">
+        <i class="pi pi-arrow-left"></i> All groups
+      </button>
     </div>
-    <button class="leave-group-btn" (click)="leaveGroup()">Leave Group</button>
+    @if (ready) {
+    <h1 class="display">{{ isCreator ? "Your" : creatorFirstName + "'s" }} group.</h1>
     } @else {
-    <div class="back-link" (click)="backToHomePage()">Back to Home Page</div>
+    <h1 class="display" aria-busy="true">
+      <span class="sr-only">Loading the group</span>
+      <span class="skeleton skeleton-text" style="width: 5.5em; height: 0.8em"></span>
+    </h1>
     }
-  </div>
-</div>
+    <p class="page-meta">
+      <span>{{ isToday ? "Today" : (dateLabel | date : "EEEE dd.MM.yyyy") }}</span>
+      @if (orders === undefined) {
+      <span class="skeleton skeleton-text" style="width: 11em"></span>
+      } @else { @if (allOrdersLength) {
+      <span>{{ allOrdersLength }} {{ allOrdersLength === 1 ? "item" : "items" }}</span>
+      } @if (orderedAt) {
+      <span class="tag tag-ink"><i class="pi pi-check"></i> Ordered {{ orderedAt | date : "HH:mm" }}</span>
+      } @else if (isToday) {
+      <span class="tag tag-accent">Collecting orders</span>
+      } }
+    </p>
 
-<div class="container">
-  <div class="orders grid">
-    @if (orders?.length === 0) {
-    <div class="no-orders-message">
-      <h3>No Orders Available</h3>
-    </div>
-    } @for (order of orders; track $index) {
-    <app-order-card
-      [order]="order"
-      [deliveryPrice]="4"
-      [totalOrders]="allOrdersLength"
-      class="col-12 md:col-6 xl:col-4"
-    ></app-order-card>
-    }
-  </div>
-  @if (orders?.length) {
-  <div class="total-price-box">
-    <div class="total-content">
-      <h4>Total Price for Entire Order</h4>
-      <p>{{ orderPrice }} GEL</p>
-      <h4 class="size mt-3">Send your share to {{ orderCreator?.name }}</h4>
-      @if(orderCreator?.bogAccountNumber) {
-      <span class="mt-3 flex flex-row">
-        <h4 class="mr-2">Bank of Georgia account number:</h4>
-        <p>{{ orderCreator?.bogAccountNumber }}</p>
-        <i
-          class="pi pi-clone"
-          (click)="copyToClipboard(orderCreator?.bogAccountNumber)"
-        ></i>
-      </span>
-      } @if(orderCreator?.tbcAccountNumber) {
-      <span class="mt-3 flex flex-row">
-        <h4 class="mr-2">TBC bank account number:</h4>
-        <p>{{ orderCreator?.tbcAccountNumber }}</p>
-        <i
-          class="pi pi-clone"
-          (click)="copyToClipboard(orderCreator?.tbcAccountNumber)"
-        ></i>
-      </span>
-      } @if(orderCreator?.personalNumber) {
-      <span class="mt-3 flex flex-row">
-        <h4 class="mr-2">Personal number:</h4>
-        <p>{{ orderCreator?.personalNumber }}</p>
-        <i
-          class="pi pi-clone ml-2"
-          (click)="copyToClipboard(orderCreator?.personalNumber)"
-        ></i>
-      </span>
+    @if (isToday && ready) {
+    <div class="page-actions">
+      @if (isCreator || (canEdit && hasOwnItems)) {
+      <p-button
+        [label]="isCreator ? 'Delete group' : 'Leave'"
+        severity="danger"
+        [text]="true"
+        (onClick)="leaveGroup()"
+      />
+      } @if (isCreator) { @if (orderedAt) {
+      <p-button
+        label="Reopen"
+        icon="pi pi-lock-open"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="setOrdered(false)"
+      />
+      } @else {
+      <p-button
+        label="Mark as ordered"
+        icon="pi pi-check"
+        severity="secondary"
+        [outlined]="true"
+        [disabled]="!allOrdersLength"
+        (onClick)="setOrdered(true)"
+      />
+      } } @if (canEdit) {
+      <p-button label="Add item" icon="pi pi-plus" (onClick)="backToOrderPage()" />
       }
     </div>
+    }
+  </header>
+
+  @if (orderedAt && isToday) {
+  <div class="banner">
+    <span class="tag tag-ink"><i class="pi pi-lock"></i> Closed</span>
+    {{ isCreator ? "You" : creatorFirstName }} placed this order at
+    {{ orderedAt | date : "HH:mm" }}.
+    @if (isCreator) { Reopen it if someone still needs to add something. }
+  </div>
+  } @if (orders === undefined) {
+  <div class="summary" aria-hidden="true">
+    <section class="order-block">
+      <header class="section-head">
+        <span class="skeleton" style="width: 220px; height: 26px"></span>
+      </header>
+      @for (i of [1, 2, 3, 4]; track i) {
+      <div class="line">
+        <span class="skeleton" style="width: 36px; height: 34px"></span>
+        <span class="skeleton" style="width: 40px; height: 52px"></span>
+        <span class="skeleton" style="width: min(320px, 90%); height: 18px"></span>
+        <span class="skeleton" style="width: 60px; height: 28px"></span>
+      </div>
+      }
+    </section>
+    <div class="share-block skeleton" style="height: 340px"></div>
+  </div>
+  } @else if (orders.length === 0) {
+  <section class="empty">
+    <p class="empty-number num" aria-hidden="true">0</p>
+    <div class="empty-copy">
+      <h2 class="h2">Nothing here yet.</h2>
+      <p class="muted">
+        {{ canEdit ? "Be the first to add something." : "No one ordered in this group." }}
+      </p>
+      @if (canEdit) {
+      <p-button label="Add item" icon="pi pi-plus" (onClick)="backToOrderPage()" />
+      }
+    </div>
+  </section>
+  } @else {
+  <div class="summary">
+    <section class="order-block">
+      <header class="section-head">
+        <span class="section-no">01</span>
+        <h2 class="h2">Order for Weimar</h2>
+        <p-button
+          label="Copy"
+          icon="pi pi-copy"
+          size="small"
+          severity="secondary"
+          [text]="true"
+          (onClick)="copyOrder()"
+        />
+      </header>
+      <ul>
+        @for (line of lines; track $index) {
+        <li class="line">
+          <span class="qty num">{{ line.group.count }}<small>×</small></span>
+          <app-shawarma-graphic
+            class="line-art"
+            [layers]="line.layers"
+            [scale]="line.scale"
+            [mini]="true"
+          />
+          <span class="line-desc">{{ describeOrder(line.group.productDetails) }}</span>
+          <span class="avatar-stack">
+            @for (user of line.group.users; track $index) {
+            <img
+              class="avatar"
+              [src]="user.photoUrl"
+              [alt]="user.orderedBy"
+              [pTooltip]="user.orderedBy"
+              tooltipPosition="top"
+              referrerpolicy="no-referrer"
+            />
+            }
+          </span>
+        </li>
+        }
+      </ul>
+      <dl class="totals">
+        <div>
+          <dt>Food</dt>
+          <dd class="money">{{ foodPrice | number : "1.0-2" }} GEL</dd>
+        </div>
+        <div>
+          <dt>Delivery</dt>
+          <dd class="money">{{ deliveryPrice }} GEL</dd>
+        </div>
+        <div class="grand">
+          <dt>Total</dt>
+          <dd class="num">{{ orderPrice | number : "1.0-2" }}<small>GEL</small></dd>
+        </div>
+      </dl>
+      @if (isToday) {
+      <div class="call-row">
+        <a class="call" href="tel:+995511161635">
+          <span class="label">Call Weimar</span>
+          <span class="num call-number">{{ weimarPhone }}</span>
+          <i class="pi pi-phone"></i>
+        </a>
+        <button
+          type="button"
+          class="icon-btn"
+          aria-label="Copy phone number"
+          (click)="copyToClipboard(weimarPhone)"
+        >
+          <i class="pi pi-copy"></i>
+        </button>
+      </div>
+      }
+    </section>
+
+    <aside class="share-block">
+      @if (isCreator) {
+      <span class="label">You're collecting</span>
+      <p class="share-amount num">
+        {{ orderPrice - (myShare?.total ?? 0) | number : "1.0-2" }}
+      </p>
+      <p class="share-unit">GEL · {{ paidCount }} of {{ payers.length }} paid</p>
+      } @else {
+      <span class="label">{{ myShare ? "Your share" : "Pay" }}</span>
+      @if (myShare) {
+      <p class="share-amount num">{{ myShare.total | number : "1.0-2" }}</p>
+      }
+      <p class="share-unit">{{ myShare ? "GEL to " : "" }}{{ orderCreator?.name }}</p>
+      <dl class="accounts">
+        @if (orderCreator?.bogAccountNumber) {
+        <div class="account">
+          <dt class="label">Bank of Georgia</dt>
+          <dd>
+            <code>{{ orderCreator?.bogAccountNumber }}</code>
+            <button
+              type="button"
+              class="icon-btn"
+              aria-label="Copy Bank of Georgia account number"
+              (click)="copyToClipboard(orderCreator?.bogAccountNumber)"
+            >
+              <i class="pi pi-copy"></i>
+            </button>
+          </dd>
+        </div>
+        } @if (orderCreator?.tbcAccountNumber) {
+        <div class="account">
+          <dt class="label">TBC Bank</dt>
+          <dd>
+            <code>{{ orderCreator?.tbcAccountNumber }}</code>
+            <button
+              type="button"
+              class="icon-btn"
+              aria-label="Copy TBC account number"
+              (click)="copyToClipboard(orderCreator?.tbcAccountNumber)"
+            >
+              <i class="pi pi-copy"></i>
+            </button>
+          </dd>
+        </div>
+        } @if (orderCreator?.personalNumber) {
+        <div class="account">
+          <dt class="label">Personal number</dt>
+          <dd>
+            <code>{{ orderCreator?.personalNumber }}</code>
+            <button
+              type="button"
+              class="icon-btn"
+              aria-label="Copy personal number"
+              (click)="copyToClipboard(orderCreator?.personalNumber)"
+            >
+              <i class="pi pi-copy"></i>
+            </button>
+          </dd>
+        </div>
+        }
+      </dl>
+      @if (!hasPaymentDetails) {
+      <p class="no-details">{{ creatorFirstName }} hasn't added payment details.</p>
+      } }
+    </aside>
+
+    <section class="people-block">
+      <header class="section-head">
+        <span class="section-no">02</span>
+        <h2 class="h2">Who pays what</h2>
+        @if (payers.length) {
+        <span class="tag" [class.tag-success]="paidCount === payers.length"
+          >{{ paidCount }}/{{ payers.length }} paid</span
+        >
+        }
+      </header>
+      <ul>
+        @for (person of people; track person.name) {
+        <li class="person">
+          <div class="person-name">
+            <span class="name"
+              >{{ person.name }} @if (person.name === currentUser?.displayName)
+              {<span class="muted you">(you)</span>}</span
+            >
+            @if (isOrganizer(person)) {
+            <span class="tag">Organizer</span>
+            } @else if (isCreator) {
+            <button
+              type="button"
+              class="paid-toggle"
+              [attr.aria-pressed]="person.paid"
+              (click)="togglePaid(person)"
+            >
+              <i class="pi" [ngClass]="person.paid ? 'pi-check-square' : 'pi-stop'"></i>
+              {{ person.paid ? "Paid" : "Mark as paid" }}
+            </button>
+            } @else if (person.paid) {
+            <span class="tag tag-success"><i class="pi pi-check"></i> Paid</span>
+            } @else {
+            <span class="tag tag-warning">Not paid</span>
+            }
+          </div>
+          <ul class="items">
+            @for (item of person.items; track $index) {
+            <li class="item">
+              <span>{{ describeOrder(item.productDetails) }}</span>
+              @if (item.orderedFor) {
+              <span class="added-by">via {{ item.orderedBy }}</span>
+              } @if (canEdit && item.id && item.userId === currentUser?.uid) {
+              <button
+                type="button"
+                class="icon-btn danger"
+                aria-label="Remove item"
+                title="Remove item"
+                (click)="removeItem(item.id)"
+              >
+                <i class="pi pi-times"></i>
+              </button>
+              }
+            </li>
+            }
+          </ul>
+          <span class="amount num">{{ person.total | number : "1.0-2" }}</span>
+        </li>
+        }
+      </ul>
+    </section>
   </div>
   }
 </div>

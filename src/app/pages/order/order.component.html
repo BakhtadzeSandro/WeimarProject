@@ -1,97 +1,201 @@
-<div class="container">
-  <p-toast />
-  <div class="title">
-    Choose Your Fresh Shawarma with {{ orderCreator?.name }}
-  </div>
-  <div class="form">
-    <form [formGroup]="orderForm()">
-      <div class="old-order mt-5">
-        <button
-          pButton
-          type="button"
-          class="see-order-button mt-3"
-          [disabled]="!previousOrder"
-          (click)="loadPreviousOrder()"
-        >
-          Use my last order
-        </button>
+<div class="page">
+  <header class="page-head">
+    <div class="page-label">
+      <button type="button" class="back-link" (click)="backToHomePage()">
+        <i class="pi pi-arrow-left"></i> All groups
+      </button>
+    </div>
+    <h1 class="display">Build your<br />shawarma.</h1>
+    <p class="page-meta">
+      @if (orderCreator) {
+      <span>For {{ firstName }}'s group</span>
+      } @else {
+      <span class="skeleton skeleton-text" style="width: 9em"></span>
+      } @if (itemsSoFar !== undefined) {
+      <span>{{ itemsSoFar }} {{ itemsSoFar === 1 ? "item" : "items" }} so far</span>
+      } @else {
+      <span class="skeleton skeleton-text" style="width: 6em"></span>
+      }
+      <button type="button" class="text-link" (click)="navigateToOrdersList()">
+        See the group
+      </button>
+    </p>
+  </header>
 
-        <button
-          pButton
-          type="button"
-          class="see-order-button mt-3"
-          [disabled]="!previousOrder"
-          (click)="showPreviousOrder()"
+  @if (ordered) {
+  <div class="banner">
+    <span class="tag tag-ink">Closed</span>
+    {{ firstName }} already placed this order, so it's closed for new items.
+  </div>
+  }
+
+  <div class="builder">
+    <aside class="preview">
+      @if (menuLoaded) {
+      <app-shawarma-graphic
+        class="preview-art"
+        [layers]="layers"
+        [scale]="scale"
+        [legend]="true"
+      />
+      } @else {
+      <div class="skeleton preview-skeleton" aria-hidden="true"></div>
+      }
+      <div class="preview-total">
+        <span class="label">{{ selectedSize?.label ?? "No size yet" }}</span>
+        <span class="preview-price num" [class.placeholder]="!selectedSize"
+          >{{ selectedSize?.price ?? 0 }}<small>GEL</small></span
         >
-          See last order
-        </button>
       </div>
-      <div class="include-all mt-5">
-        <p-radiobutton
-          formControlName="withEverything"
-          inputId="withEverything"
-          [value]="true"
+    </aside>
+
+    <form class="steps" [formGroup]="orderForm()" [attr.aria-busy]="!menuLoaded">
+      @if (!menuLoaded) {
+      <p class="sr-only" role="status">Loading the menu</p>
+      } @if (previousOrder) {
+      <button type="button" class="repeat" (click)="loadPreviousOrder()">
+        <i class="pi pi-replay"></i>
+        <span class="label">Repeat last order</span>
+        <span class="repeat-desc">{{ describeOrder(previousOrder.productDetails) }}</span>
+      </button>
+      }
+
+      <section class="step">
+        <header class="section-head">
+          <span class="section-no">01</span>
+          <h2 class="h2">Size</h2>
+        </header>
+        @if (menuLoaded) {
+        <div
+          class="tiles"
+          [style.grid-template-columns]="
+            'repeat(' + (productInfoOptions.length || 1) + ', minmax(0, 1fr))'
+          "
+        >
+          @for (option of productInfoOptions; track option.value) {
+          <button
+            type="button"
+            class="tile"
+            [attr.aria-pressed]="option.value === selectedSize?.value"
+            (click)="selectSize(option)"
+          >
+            <span class="tile-title">{{ option.label }}</span>
+            <span class="tile-sub">{{ option.price }} GEL</span>
+          </button>
+          }
+        </div>
+        } @else {
+        <div class="tiles" style="grid-template-columns: repeat(3, minmax(0, 1fr))" aria-hidden="true">
+          @for (i of [1, 2, 3]; track i) {
+          <div class="tile skeleton-tile">
+            <span class="skeleton" style="width: 70%; height: 26px"></span>
+            <span class="skeleton" style="width: 40%; height: 14px"></span>
+          </div>
+          }
+        </div>
+        }
+      </section>
+
+      <section class="step">
+        <header class="section-head">
+          <span class="section-no">02</span>
+          <h2 class="h2">Ingredients</h2>
+        </header>
+        @if (menuLoaded) {
+        <div class="chips">
+          <button
+            type="button"
+            class="chip"
+            [attr.aria-pressed]="!hasRestrictions"
+            (click)="clearRestrictions()"
+          >
+            <app-ingredient-icon [everything]="true" />
+            With everything
+          </button>
+          @for (option of ingredientOptions; track option.value) {
+          <button
+            type="button"
+            class="chip"
+            [attr.aria-pressed]="isSelected('restrictions', option)"
+            (click)="toggle('restrictions', option)"
+          >
+            <app-ingredient-icon
+              [name]="ingredientOf(option)"
+              [mark]="isSelected('restrictions', option) ? 'remove' : 'none'"
+            />
+            {{ option.label }}
+          </button>
+          }
+        </div>
+        } @else {
+        <div class="chips" aria-hidden="true">
+          @for (width of [148, 112, 124, 118, 108, 130]; track $index) {
+          <span class="skeleton skeleton-chip" [style.width.px]="width"></span>
+          }
+        </div>
+        }
+      </section>
+
+      @if (!menuLoaded || ingredientAdjustmentOptions.length) {
+      <section class="step">
+        <header class="section-head">
+          <span class="section-no">03</span>
+          <h2 class="h2">Extras</h2>
+        </header>
+        @if (menuLoaded) {
+        <div class="chips">
+          @for (option of ingredientAdjustmentOptions; track option.value) {
+          <button
+            type="button"
+            class="chip"
+            [attr.aria-pressed]="isSelected('adjustments', option)"
+            (click)="toggle('adjustments', option)"
+          >
+            <app-ingredient-icon
+              [name]="ingredientOf(option)"
+              [mark]="isLessAdjustment(option.value) ? 'less' : 'add'"
+            />
+            {{ option.label }}
+          </button>
+          }
+        </div>
+        } @else {
+        <div class="chips" aria-hidden="true">
+          @for (width of [120, 112, 132, 122]; track $index) {
+          <span class="skeleton skeleton-chip" [style.width.px]="width"></span>
+          }
+        </div>
+        }
+      </section>
+      }
+
+      <section class="step">
+        <header class="section-head">
+          <span class="section-no">{{ forStepNo }}</span>
+          <h2 class="h2"><label for="orderedFor">Who is it for?</label></h2>
+          <span class="label">Optional</span>
+        </header>
+        <input
+          pInputText
+          id="orderedFor"
+          formControlName="orderedFor"
+          placeholder="Leave empty if it's for you"
+          class="w-full for-input"
         />
-        <label for="withEverything" class="ml-2">With Everything</label>
-      </div>
-      <div class="size mt-5">
-        <label for="size">Choose Size</label>
-        <p-select
-          id="size"
-          formControlName="size"
-          [options]="productInfoOptions"
-          optionLabel="label"
-          placeholder="Select Size"
-          styleClass="w-full md:w-80 mt-3"
-        />
-      </div>
-      <div class="restrictions mt-5">
-        <label for="restrictions">Choose Restrictions</label>
-        <p-multiselect
-          id="restrictions"
-          formControlName="restrictions"
-          [options]="ingredientOptions"
-          [maxSelectedLabels]="5"
-          optionLabel="label"
-          placeholder="Select Restrictions"
-          styleClass="w-full md:w-80 mt-3"
-        />
-      </div>
-      <div class="adjustments mt-5">
-        <label for="adjustments">Choose Adjustments</label>
-        <p-multiselect
-          id="adjustments"
-          formControlName="adjustments"
-          [options]="ingredientAdjustmentOptions"
-          [maxSelectedLabels]="5"
-          optionLabel="label"
-          [showToggleAll]="false"
-          placeholder="Select Adjustments"
-          styleClass="w-full md:w-80 mt-3"
-          (onChange)="onIngredientAdjustment($event)"
+      </section>
+
+      <div class="submit">
+        <p-button
+          [label]="firstName ? 'Add to ' + firstName + '\'s order' : 'Add to order'"
+          icon="pi pi-arrow-right"
+          iconPos="right"
+          styleClass="cta"
+          [fluid]="true"
+          [loading]="submitting"
+          [disabled]="!selectedSize || ordered"
+          (onClick)="submitOrder()"
         />
       </div>
     </form>
-    @if (orderForm().controls.size.value?.price) {
-    <div class="price mt-3">
-      Price: {{ orderForm().controls.size.value?.price }}
-    </div>
-    }
-    <div class="button-box mt-3">
-      <button pButton (click)="submitOrder()" type="button" class="submit-btn">
-        Send to {{ firstName }}
-      </button>
-      <button
-        pButton
-        (click)="navigateToOrdersList()"
-        type="button"
-        class="submit-btn"
-      >
-        See orders
-      </button>
-      <button class="leave-group-btn" (click)="leaveGroup()">
-        Leave Group
-      </button>
-    </div>
   </div>
 </div>

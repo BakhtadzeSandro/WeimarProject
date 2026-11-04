@@ -1,33 +1,22 @@
-<div class="container">
-  <div class="left">
-    @if (currentUser$ | async; as currentUser) {
-    <div class="user">
-      <div class="photo">
-        <img [src]="currentUser.photoURL" (click)="toggleOverlay()" />
-      </div>
-      <div class="name" *ngIf="!isTabletOrSmaller">
-        {{ currentUser.displayName }}
-      </div>
-    </div>
-    }
+<header class="app-header">
+  <a class="brand" routerLink="/all-orders">
+    <span class="brand-mark" aria-hidden="true"></span>
+    <span class="brand-word">Weimar</span>
+    <span class="brand-sub">Omedia lunch</span>
+  </a>
+
+  <span class="header-date">{{ today | date : "EEEE dd.MM.yyyy" }}</span>
+
+  @if (currentUser$ | async; as currentUser) {
+  <div class="user">
+    <img
+      class="avatar"
+      [src]="currentUser.photoURL"
+      alt=""
+      referrerpolicy="no-referrer"
+    />
+    <span class="name">{{ currentUser.displayName }}</span>
+    <button type="button" class="text-link" (click)="logout()">Log out</button>
   </div>
-
-  <div class="header">Weimar Omedia</div>
-
-  <div class="right">
-    @if (currentUser$ | async) {
-    <div class="logout" (click)="logout()" *ngIf="!isTabletOrSmaller">
-      Log Out
-    </div>
-    }
-  </div>
-</div>
-
-<p-overlay [(visible)]="overlayVisible">
-  <ng-template #content *ngIf="currentUser$ | async as currentUser">
-    <div class="overlay">
-      <div class="name">{{ currentUser.displayName }}</div>
-      <div class="logout" (click)="logout()">Log Out</div>
-    </div>
-  </ng-template>
-</p-overlay>
+  }
+</header>

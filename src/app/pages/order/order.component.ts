@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { Unsubscribe } from '@angular/fire/firestore';
 import {
   FormBuilder,
   FormGroup,
@@ -9,24 +10,31 @@ import {
 import { ActivatedRoute, Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { ButtonModule } from 'primeng/button';
-import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { MultiSelectModule } from 'primeng/multiselect';
-import { RadioButton } from 'primeng/radiobutton';
-import { Select } from 'primeng/select';
-import { TextareaModule } from 'primeng/textarea';
-import { Toast } from 'primeng/toast';
-import { of, switchMap, tap } from 'rxjs';
-import { PreviousOrderModalComponent } from '../../components/index';
+import { InputTextModule } from 'primeng/inputtext';
+import { finalize, switchMap, take } from 'rxjs';
+import { IngredientIconComponent } from '../../components/ingredient-icon/ingredient-icon.component';
+import { ShawarmaGraphicComponent } from '../../components/shawarma-graphic/shawarma-graphic.component';
 import {
   FirestoreUser,
-  Ingredient,
-  IngredientAdjustment,
   MultiselectOption,
   Order,
   OrderForm,
-  productInfo,
 } from '../../models/index';
 import { AuthService, OrderService, UsersService } from '../../services/index';
+import { formatDateToDocName } from '../../utils/date.utils';
+import {
+  buildLayers,
+  GraphicLayer,
+  ingredientOf,
+  isLessAdjustment,
+  sizeScale,
+  toAdjustmentOptions,
+  toRestrictionOptions,
+  toSizeOptions,
+} from '../../utils/graphic.utils';
+import { describeOrder } from '../../utils/order.utils';
+
+type ChipControl = 'restrictions' | 'adjustments';
 
 @Component({
   selector: 'app-order',
@@ -34,202 +42,135 @@ import { AuthService, OrderService, UsersService } from '../../services/index';
   styleUrls: ['./order.component.scss'],
   standalone: true,
   imports: [
-    MultiSelectModule,
     FormsModule,
     ReactiveFormsModule,
     CommonModule,
-    RadioButton,
-    TextareaModule,
+    InputTextModule,
     ButtonModule,
-    Select,
-    Toast,
+    ShawarmaGraphicComponent,
+    IngredientIconComponent,
   ],
-  providers: [ToastrService, DialogService],
+  providers: [ToastrService],
 })
-export class OrderComponent implements OnInit {
+export class OrderComponent implements OnInit, OnDestroy {
   private orderService = inject(OrderService);
   private userService = inject(UsersService);
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private toastr = inject(ToastrService);
-  private dialogService = inject(DialogService);
   private router = inject(Router);
   private activatedRoute = inject(ActivatedRoute);
 
-  ref: DynamicDialogRef | undefined;
+  creatorId: string = this.activatedRoute.snapshot.params['creatorId'];
 
   previousOrder: Order | undefined;
 
   orderForm = signal<FormGroup<OrderForm>>(this.buildForm());
 
   ingredientOptions: MultiselectOption[] = [];
-  productInfoOptions: MultiselectOption[] = [{ label: '', value: '' }];
+  productInfoOptions: MultiselectOption[] = [];
   ingredientAdjustmentOptions: MultiselectOption[] = [];
   orderCreator: FirestoreUser | undefined;
+  submitting = false;
+  menuLoaded = false;
+  itemsSoFar: number | undefined;
+  ordered = false;
+  unsub: Unsubscribe | undefined;
+  layers: GraphicLayer[] = [];
+  describeOrder = describeOrder;
+  ingredientOf = ingredientOf;
+  isLessAdjustment = isLessAdjustment;
 
   constructor() {}
 
+  get selectedSize() {
+    return this.orderForm().controls.size.value;
+  }
+
+  get scale() {
+    return sizeScale(this.productInfoOptions, this.selectedSize?.value);
+  }
+
+  get hasRestrictions() {
+    return !!this.orderForm().controls.restrictions.value?.length;
+  }
+
   navigateToOrdersList() {
-    this.router.navigate([`order/${this.orderCreator?.id}/summary`]);
+    this.router.navigate([`order/${this.creatorId}/summary`]);
   }
 
-  leaveGroup() {
-    this.authService
-      .getCurrentUser()
-      .pipe(
-        switchMap((user) => {
-          this.orderService.leaveGroup(
-            this.orderCreator?.id ?? '',
-            user?.displayName ?? '',
-            [],
-            user?.uid === this.orderCreator?.id
-          );
-
-          return of(user);
-        })
-      )
-      .subscribe(() => this.router.navigate(['/all-orders']));
+  backToHomePage() {
+    this.router.navigate(['/all-orders']);
   }
 
-  showPreviousOrder() {
-    this.ref = this.dialogService.open(PreviousOrderModalComponent, {
-      header: 'Your last order was: ',
-      width: '70vw',
-      modal: true,
-      dismissableMask: true,
-      focusOnShow: false,
-      breakpoints: {
-        '992px': '75vw',
-        '576px': '90vw',
-      },
-      data: {
-        previousOrder: this.previousOrder,
-      },
-    });
+  selectSize(option: MultiselectOption) {
+    this.orderForm().controls.size.setValue(option);
+  }
+
+  clearRestrictions() {
+    this.orderForm().controls.restrictions.setValue([]);
+  }
+
+  isSelected(control: ChipControl, option: MultiselectOption) {
+    return !!this.orderForm()
+      .controls[control].value?.some((o) => o.value === option.value);
+  }
+
+  // One choice per ingredient: an adjustment replaces any restriction or other adjustment
+  // of the same ingredient ("Extra sauce" drops "Less sauce"), a restriction replaces adjustments.
+  toggle(control: ChipControl, option: MultiselectOption) {
+    const controls = this.orderForm().controls;
+
+    if (this.isSelected(control, option)) {
+      controls[control].setValue(
+        controls[control].value?.filter((o) => o.value !== option.value) ?? []
+      );
+      return;
+    }
+
+    const ingredient = ingredientOf(option);
+    if (ingredient) {
+      const clashing: ChipControl[] =
+        control === 'restrictions'
+          ? ['adjustments']
+          : ['restrictions', 'adjustments'];
+      clashing.forEach((name) =>
+        controls[name].setValue(
+          controls[name].value?.filter((o) => ingredientOf(o) !== ingredient) ??
+            []
+        )
+      );
+    }
+    controls[control].setValue([...(controls[control].value ?? []), option]);
   }
 
   loadPreviousOrder() {
-    const size = this.orderForm().get('size');
-    const restrictions = this.orderForm().get('restrictions');
-    const adjustments = this.orderForm().get('adjustments');
-    const withEverything = this.orderForm().get('withEverything');
+    const details = this.previousOrder?.productDetails;
+    if (!details) return;
 
-    const sizeOption = this.productInfoOptions.find(
-      (option) => option.value === this.previousOrder?.productDetails.size
+    const { size, restrictions, adjustments } = this.orderForm().controls;
+    size.setValue(
+      this.productInfoOptions.find((option) => option.value === details.size)
     );
-
-    const transformRestrictionsToOptions =
-      this.previousOrder?.productDetails?.restrictions?.map(
-        (item) =>
-          ({
-            label: item,
-            value: item,
-          } as MultiselectOption)
-      );
-
-    const transformAdjustmentsToOptions =
-      this.previousOrder?.productDetails?.adjustment?.map(
-        (item) =>
-          ({
-            label: item,
-            value: item,
-          } as MultiselectOption)
-      );
-
-    size?.setValue(sizeOption);
-    withEverything?.setValue(
-      this.previousOrder?.productDetails?.withEverything
+    restrictions.setValue(
+      this.ingredientOptions.filter((option) =>
+        details.restrictions?.includes(option.value)
+      )
     );
-    adjustments?.setValue(transformAdjustmentsToOptions);
-    restrictions?.setValue(transformRestrictionsToOptions);
-  }
-
-  listenToWithEverythingControl() {
-    this.orderForm()
-      .controls.withEverything.valueChanges.pipe(
-        tap((val) => {
-          if (val) {
-            this.orderForm().controls.restrictions.setValue([]);
-          }
-        })
+    adjustments.setValue(
+      this.ingredientAdjustmentOptions.filter((option) =>
+        details.adjustment?.includes(option.value)
       )
-      .subscribe();
-  }
-
-  listenToRestrictions() {
-    this.orderForm()
-      .controls.restrictions.valueChanges.pipe(
-        tap((val) => {
-          if (val?.length) {
-            this.orderForm().controls.withEverything.setValue(false);
-          }
-        })
-      )
-      .subscribe();
+    );
   }
 
   buildForm() {
     return this.fb.group<OrderForm>({
       size: this.fb.control(null),
-      useLastOrder: this.fb.control(false),
       restrictions: this.fb.control([]),
-      withEverything: this.fb.control(false),
       adjustments: this.fb.control([]),
+      orderedFor: this.fb.control(''),
     });
-  }
-
-  checkOverlappingProducts() {
-    const restrictions = this.orderForm().get('restrictions')?.value;
-    const adjustments = this.orderForm().get('adjustments')?.value;
-    const restrictedProducts = restrictions?.map(
-      (item) => item.label.split(' ')[1]
-    );
-    const adjustedProducts = adjustments?.map(
-      (item) => item.label.split(' ')[1]
-    );
-
-    return restrictedProducts?.filter((value) =>
-      adjustedProducts?.includes(value)
-    );
-  }
-
-  checkFormValidity() {
-    const size = this.orderForm().get('size')?.value;
-    const restrictions = this.orderForm().get('restrictions')?.value;
-    const withEverything = this.orderForm().get('withEverything')?.value;
-
-    const overlappedProducts = this.checkOverlappingProducts();
-
-    if (overlappedProducts?.length) {
-      this.toastr.error(
-        `Conflicting products in Restrictions and Adjustments: ${overlappedProducts.join(
-          ', '
-        )}`,
-        'Error',
-        {
-          timeOut: 8000,
-        }
-      );
-    }
-
-    if (
-      !!!size ||
-      (!!!(restrictions && restrictions.length > 0) && !!!withEverything)
-    ) {
-      this.toastr.warning(
-        'Please choose Size and Ingredients: either With Everything or Restrictions for your Shawarma :)',
-        'Warning',
-        {
-          timeOut: 8000,
-        }
-      );
-    }
-
-    return (
-      !!size &&
-      (!!(restrictions && restrictions.length > 0) || !!withEverything) &&
-      !!!overlappedProducts?.length
-    );
   }
 
   checkPreviousOrder() {
@@ -239,140 +180,116 @@ export class OrderComponent implements OnInit {
     }
   }
 
-  onIngredientAdjustment(event: any) {
-    const selectedValue = event.itemValue;
-    const formValue: MultiselectOption[] = event.value;
-    const selectedProduct = selectedValue.value.split(' ')[1];
-    const adjustmentsControl = this.orderForm().get('adjustments');
-
-    if (formValue) {
-      formValue.forEach((val, i) => {
-        if (val.value.includes(selectedProduct) && val != selectedValue) {
-          const newValue = formValue.filter(
-            (formVal) => formVal.value !== val.value
-          );
-          adjustmentsControl?.setValue(newValue);
-        }
-      });
-    }
-  }
-
   submitOrder() {
-    if (this.checkFormValidity()) {
-      return this.authService
-        .getCurrentUser()
-        .pipe(
-          switchMap((currentUser) => {
-            const payload: Order = {
-              orderedBy: currentUser?.displayName,
-              photoUrl: currentUser?.photoURL,
-              productDetails: {
-                price: this.orderForm().controls.size.value?.price,
-                size: this.orderForm().controls.size.value?.value,
-                restrictions: this.orderForm().controls.restrictions.value?.map(
-                  (val) => val.value
-                ),
-                withEverything: this.orderForm().controls.withEverything.value,
-                adjustment: this.orderForm().controls.adjustments.value?.map(
-                  (val) => val.value
-                ),
-              },
-            };
-
-            localStorage.setItem('previousOrder', JSON.stringify(payload));
-
-            return this.orderService.submitOrder(
-              payload,
-              this.orderCreator?.id ?? ''
-            );
-          })
-        )
-        .subscribe((result) => {
-          if (!result) {
-            this.toastr.error(
-              'Group may not exist any more',
-              'Error submitting order'
-            );
-            this.router.navigate(['/all-orders']);
-            return;
-          }
-        });
-    } else {
+    if (!this.selectedSize) {
+      this.toastr.warning('Pick a size first');
       return;
     }
-  }
 
-  mapToMultiselectValues(ingredients: Ingredient[]) {
-    ingredients.map((val) => {
-      this.ingredientOptions.push({
-        label: val.product.restriction,
-        value: val.product.restriction,
+    this.submitting = true;
+    this.authService
+      .getCurrentUser()
+      .pipe(
+        take(1),
+        switchMap((currentUser) => {
+          const { size, restrictions, adjustments, orderedFor } =
+            this.orderForm().controls;
+          const forSomeoneElse = orderedFor.value?.trim() || null;
+          const payload: Order = {
+            id: crypto.randomUUID(),
+            userId: currentUser?.uid,
+            orderedBy: currentUser?.displayName,
+            orderedFor: forSomeoneElse,
+            photoUrl: currentUser?.photoURL,
+            productDetails: {
+              price: size.value?.price,
+              size: size.value?.value,
+              restrictions: restrictions.value?.map((val) => val.value),
+              withEverything: !restrictions.value?.length,
+              adjustment: adjustments.value?.map((val) => val.value),
+            },
+          };
+
+          // "Use my last order" should only remember your own food.
+          if (!forSomeoneElse) {
+            localStorage.setItem('previousOrder', JSON.stringify(payload));
+          }
+
+          return this.orderService.submitOrder(payload, this.creatorId);
+        }),
+        finalize(() => (this.submitting = false))
+      )
+      .subscribe((result) => {
+        if (!result) {
+          this.toastr.error(
+            'This group is closed or no longer exists',
+            "Couldn't add your order"
+          );
+          this.router.navigate(['/all-orders']);
+        }
       });
-    });
   }
 
-  mapProductsInfo(productsInfo: productInfo[]) {
-    productsInfo.map((val) => {
-      this.productInfoOptions.push({
-        label: val.productInfo.size,
-        value: val.productInfo.size,
-        price: val.productInfo.price,
-      });
-    });
-    this.productInfoOptions.splice(0, 1);
+  updateLayers() {
+    const { restrictions, adjustments } = this.orderForm().controls;
+    this.layers = buildLayers(
+      this.ingredientOptions,
+      this.ingredientAdjustmentOptions,
+      restrictions.value?.map((option) => option.value),
+      adjustments.value?.map((option) => option.value)
+    );
   }
 
-  mapIngredientAdjustments(ingredientAdjustments: IngredientAdjustment[]) {
-    ingredientAdjustments.forEach((val) => {
-      if (val.product.adjustment && val.product.ingredient) {
-        val.product.adjustment.forEach((adjustment: string) => {
-          this.ingredientAdjustmentOptions.push({
-            label: adjustment,
-            value: adjustment,
-          });
-        });
-      }
-    });
-  }
-
-  getProductInfo() {
-    this.orderService.getProductSizesAndPrices().then((val) => {
-      this.mapProductsInfo(val);
-    });
-  }
-
-  getIngredients() {
-    this.orderService.getIngredientsData().then((val) => {
-      this.mapToMultiselectValues(val);
-    });
-  }
-
-  getIngredientAdjustments() {
-    this.orderService.getIngredientAdjustmentsData().then((val) => {
-      this.mapIngredientAdjustments(val);
-    });
+  loadMenu() {
+    Promise.all([
+      this.orderService.getProductSizesAndPrices(),
+      this.orderService.getIngredientsData(),
+      this.orderService.getIngredientAdjustmentsData(),
+    ]).then(([sizes, ingredients, adjustments]) => {
+      this.productInfoOptions = toSizeOptions(sizes);
+      this.ingredientOptions = toRestrictionOptions(ingredients);
+      this.ingredientAdjustmentOptions = toAdjustmentOptions(adjustments);
+      this.menuLoaded = true;
+      this.updateLayers();
+    }, () => this.toastr.error('Reload the page to try again', "Couldn't load the menu"));
   }
 
   getOrderCreator() {
-    const orderCreatorId = this.activatedRoute.snapshot.params['creatorId'];
-    this.userService.getUserWithId(orderCreatorId ?? '').then((val) => {
+    this.userService.getUserWithId(this.creatorId ?? '').then((val) => {
       if (val) {
         this.orderCreator = val;
       }
     });
   }
 
+  listenToGroup() {
+    this.unsub = this.orderService.listenToOrderUpdates(
+      formatDateToDocName(),
+      (doc) => {
+        const day = doc.data();
+        this.itemsSoFar = day?.[this.creatorId]?.length ?? 0;
+        this.ordered = !!day?.['orderedGroups']?.[this.creatorId];
+      }
+    );
+  }
+
   get firstName(): string {
-    return this.orderCreator?.name?.split(' ')[0] ?? 'Levancho';
+    return this.orderCreator?.name?.split(' ')[0] ?? '';
+  }
+
+  get forStepNo() {
+    return !this.menuLoaded || this.ingredientAdjustmentOptions.length ? '04' : '03';
   }
 
   ngOnInit() {
-    this.listenToWithEverythingControl();
     this.checkPreviousOrder();
-    this.listenToRestrictions();
-    this.getIngredients();
-    this.getProductInfo();
-    this.getIngredientAdjustments();
+    this.orderForm().valueChanges.subscribe(() => this.updateLayers());
+    this.loadMenu();
     this.getOrderCreator();
+    this.listenToGroup();
+  }
+
+  ngOnDestroy() {
+    this.unsub?.();
   }
 }

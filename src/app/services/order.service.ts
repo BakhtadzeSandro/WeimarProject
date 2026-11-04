@@ -1,7 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { initializeApp } from '@angular/fire/app';
 import {
-  arrayUnion,
   collection,
   deleteField,
   doc,
@@ -16,6 +15,7 @@ import {
   orderBy,
   query,
   QueryDocumentSnapshot,
+  runTransaction,
   setDoc,
   startAfter,
   Timestamp,
@@ -23,6 +23,8 @@ import {
   updateDoc,
 } from '@angular/fire/firestore';
 import { Router } from '@angular/router';
+import { User } from 'firebase/auth';
+import { ConfirmationService } from 'primeng/api';
 import { firebaseConfig } from '../../../environment';
 import {
   BankOptions,
@@ -32,12 +34,14 @@ import {
   productInfo,
 } from '../models/index';
 import { formatDateToDocName } from '../utils/date.utils';
+import { isOwnOrder, personName } from '../utils/order.utils';
 
 @Injectable({
   providedIn: 'root',
 })
 export class OrderService {
   private router = inject(Router);
+  private confirmationService = inject(ConfirmationService);
   private firestore: Firestore;
   private db: any;
 
@@ -47,53 +51,42 @@ export class OrderService {
     this.firestore = getFirestore(app);
   }
 
-  async getIngredientsData(): Promise<Ingredient[]> {
-    const querySnapshot = await getDocs(
-      collection(this.firestore, 'ingredientRestrictions')
-    );
-    const data = querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+  private menu = new Map<string, Promise<unknown[]>>();
 
-    return data as Ingredient[];
+  // Menu collections rarely change, so each is read once per session and shared between pages.
+  private getMenuCollection<T>(name: string, withId = true): Promise<T[]> {
+    if (!this.menu.has(name)) {
+      this.menu.set(
+        name,
+        getDocs(collection(this.firestore, name))
+          .then((snapshot) =>
+            snapshot.docs.map((doc) =>
+              withId ? { id: doc.id, ...doc.data() } : doc.data()
+            )
+          )
+          .catch((error) => {
+            this.menu.delete(name);
+            throw error;
+          })
+      );
+    }
+    return this.menu.get(name) as Promise<T[]>;
   }
 
-  async getProductSizesAndPrices(): Promise<productInfo[]> {
-    const querySnapshot = await getDocs(
-      collection(this.firestore, 'productSizes')
-    );
-
-    const data = querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-
-    return data as productInfo[];
+  getIngredientsData(): Promise<Ingredient[]> {
+    return this.getMenuCollection('ingredientRestrictions');
   }
 
-  async getIngredientAdjustmentsData(): Promise<IngredientAdjustment[]> {
-    const querySnapshot = await getDocs(
-      collection(this.firestore, 'ingredientAdjustments')
-    );
-    const data = querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-
-    return data as IngredientAdjustment[];
+  getProductSizesAndPrices(): Promise<productInfo[]> {
+    return this.getMenuCollection('productSizes');
   }
 
-  async getBankOptions(): Promise<BankOptions[]> {
-    const querySnapshot = await getDocs(
-      collection(this.firestore, 'bankOptions')
-    );
+  getIngredientAdjustmentsData(): Promise<IngredientAdjustment[]> {
+    return this.getMenuCollection('ingredientAdjustments');
+  }
 
-    const data = querySnapshot.docs.map((doc) => ({
-      ...doc.data(),
-    }));
-
-    return data as BankOptions[];
+  getBankOptions(): Promise<BankOptions[]> {
+    return this.getMenuCollection('bankOptions', false);
   }
 
   async createNewGroup(creatorId: string): Promise<void> {
@@ -103,10 +96,9 @@ export class OrderService {
       const docSnapshot = await getDoc(docRef);
 
       if (docSnapshot.exists()) {
+        // One group per person per day: take them to the one they already have.
         if (docSnapshot.data()[creatorId]) {
-          alert(
-            'You already have a group today and cannot create another. But you can still order from other groups.'
-          );
+          this.router.navigate([`order/${creatorId}/summary`]);
           return;
         }
         await updateDoc(docRef, {
@@ -125,46 +117,79 @@ export class OrderService {
     }
   }
 
-  async submitOrder(order: Order, creatorId: string): Promise<boolean> {
-    const docRef = doc(this.db, 'orders', formatDateToDocName());
+  // Read-modify-write a group in a transaction so concurrent edits don't overwrite each other.
+  // Resolves false if the group no longer exists, or is already ordered (unless evenIfOrdered).
+  private updateGroupOrders(
+    creatorId: string,
+    update: (orders: Order[]) => Order[],
+    { date = formatDateToDocName(), evenIfOrdered = false } = {}
+  ): Promise<boolean> {
+    const docRef = doc(this.db, 'orders', date);
 
-    try {
-      const docSnapshot = await getDoc(docRef);
-
-      const orders = docSnapshot.data() ? docSnapshot.data()![creatorId] : [];
-      let finalOrders: Order[] = [];
-      let newOrder: boolean = false;
-
-      if (!orders) {
-        return false;
-      }
-
-      if (orders.length > 0) {
-        finalOrders = orders.map((o: Order) => {
-          if (o.orderedBy === order.orderedBy) {
-            newOrder = true;
-            return order;
-          }
-          return o;
-        });
-      }
-
-      if (docSnapshot.exists()) {
-        await updateDoc(docRef, {
-          [creatorId]: newOrder ? finalOrders : arrayUnion(order),
-        });
-      } else {
-        await setDoc(docRef, {
-          [creatorId]: [order],
-        });
-      }
-
-      this.router.navigate([`order/${creatorId}/summary`]);
+    return runTransaction(this.db, async (transaction) => {
+      const data = (await transaction.get(docRef)).data();
+      const orders = data?.[creatorId];
+      if (!orders) return false;
+      if (data['orderedGroups']?.[creatorId] && !evenIfOrdered) return false;
+      transaction.update(docRef, { [creatorId]: update(orders) });
       return true;
+    });
+  }
+
+  private confirm(header: string, message: string, acceptLabel: string) {
+    return new Promise<boolean>((resolve) =>
+      this.confirmationService.confirm({
+        header,
+        message,
+        acceptLabel,
+        rejectLabel: 'Cancel',
+        acceptButtonStyleClass: 'p-button-danger',
+        rejectButtonStyleClass: 'p-button-text p-button-secondary',
+        accept: () => resolve(true),
+        reject: () => resolve(false),
+      })
+    );
+  }
+
+  async submitOrder(order: Order, creatorId: string): Promise<boolean> {
+    try {
+      const added = await this.updateGroupOrders(creatorId, (orders) => [
+        ...orders,
+        order,
+      ]);
+
+      if (added) this.router.navigate([`order/${creatorId}/summary`]);
+      return added;
     } catch (error) {
       console.error('Error submitting order:', error);
       return false;
     }
+  }
+
+  removeOrderItem(creatorId: string, itemId: string): Promise<boolean> {
+    return this.updateGroupOrders(creatorId, (orders) =>
+      orders.filter((order) => order.id !== itemId)
+    );
+  }
+
+  setPaid(date: string, creatorId: string, person: string, paid: boolean) {
+    return this.updateGroupOrders(
+      creatorId,
+      (orders) =>
+        orders.map((order) =>
+          personName(order) === person ? { ...order, paid } : order
+        ),
+      { date, evenIfOrdered: true }
+    );
+  }
+
+  // Closes the group once the creator has called the restaurant; reopening clears it.
+  setOrdered(creatorId: string, ordered: boolean) {
+    return updateDoc(doc(this.db, 'orders', formatDateToDocName()), {
+      [`orderedGroups.${creatorId}`]: ordered
+        ? Timestamp.fromDate(new Date())
+        : deleteField(),
+    });
   }
 
   listenToOrderUpdates(
@@ -186,7 +211,7 @@ export class OrderService {
       if (docSnapshot.exists()) {
         const data = docSnapshot.data();
 
-        return data[creatorId] as Order[];
+        return (data[creatorId] ?? []) as Order[];
       } else {
         return [];
       }
@@ -243,46 +268,47 @@ export class OrderService {
     return { docs: querySnapshot.docs, lastDocId: lastDoc?.id || null };
   }
 
-  async leaveGroup(
-    creatorId: string,
-    userName: string = '',
-    updatedOrders: Order[] = [],
-    isOrderCreator: boolean = false
-  ): Promise<void> {
-    if (isOrderCreator) {
-      return updateDoc(doc(this.db, 'orders', formatDateToDocName()), {
-        [creatorId]: deleteField(),
-      });
-    }
-    if (updatedOrders.length === 0) {
-      const originalOrders: Order[] = await this.retrieveOrdersPerUser(
-        formatDateToDocName(new Date()),
-        creatorId
+  // The creator leaving deletes the whole group; anyone else only removes the items they added.
+  async leaveGroup(creatorId: string, user: User | null): Promise<boolean> {
+    if (!user) return false;
+
+    if (user.uid === creatorId) {
+      const confirmed = await this.confirm(
+        'Delete your group?',
+        "Everyone's orders in this group will be removed. This can't be undone.",
+        'Delete group'
       );
+      if (!confirmed) return false;
 
-      updatedOrders =
-        originalOrders?.filter((order) => order.orderedBy !== userName) ?? [];
+      await updateDoc(doc(this.db, 'orders', formatDateToDocName()), {
+        [creatorId]: deleteField(),
+        [`orderedGroups.${creatorId}`]: deleteField(),
+      });
+      return true;
     }
 
-    if (!updatedOrders) {
-      return;
-    }
+    const confirmed = await this.confirm(
+      'Leave this group?',
+      'All items you added, including ones for other people, will be removed.',
+      'Leave group'
+    );
+    if (!confirmed) return false;
 
-    return updateDoc(doc(this.db, 'orders', formatDateToDocName()), {
-      [creatorId]: updatedOrders,
-    });
+    return this.updateGroupOrders(creatorId, (orders) =>
+      orders.filter((order) => !isOwnOrder(order, user))
+    );
   }
 
   async isUserInOrderGroup(
     dateDocName: string,
     orderCreatorId: string,
-    displayName: string
+    user: User
   ): Promise<boolean> {
     const orders = await this.retrieveOrdersPerUser(
       dateDocName,
       orderCreatorId
     );
 
-    return orders.some((order) => order.orderedBy === displayName);
+    return orders.some((order) => isOwnOrder(order, user));
   }
 }

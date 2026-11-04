@@ -1,10 +1,17 @@
-<div class="container">
-  <div class="title">
-    <p>Login to Weimar ordering system</p>
+<div class="login">
+  <div class="copy">
+    <p class="label">Weimar × Omedia</p>
+    <h1 class="display">Lunch,<br />together.</h1>
+    <p class="lead">
+      Join today's group order, build your shawarma and see exactly what you
+      owe.
+    </p>
+    <p-button
+      label="Continue with Google"
+      icon="pi pi-google"
+      size="large"
+      (onClick)="signInWithGoogle()"
+    />
   </div>
-  <div class="btn">
-    <button pButton type="button" (click)="signInWithGoogle()" class="sign-in">
-      Sign in with Google
-    </button>
-  </div>
+  <app-shawarma-graphic class="art" [layers]="demoLayers" />
 </div>

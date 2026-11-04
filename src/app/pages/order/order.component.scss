@@ -1,101 +1,158 @@
-.container {
-  width: 50%;
-  margin: 0 auto;
-  padding-top: 100px;
+.builder {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--gap);
+  align-items: start;
+}
 
+// The drawing stays in view while you choose on the right.
+.preview {
+  grid-column: 1 / span 5;
+  position: sticky;
+  top: calc(var(--header-h) + 24px);
+  padding-top: 32px;
+}
+
+.preview-art {
+  --graphic-bg: var(--accent);
+  --graphic-pad: 9%;
+}
+
+.preview-skeleton {
+  aspect-ratio: 1;
+}
+
+.preview-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.preview-price {
+  font-size: clamp(48px, 5vw, 80px);
+  font-weight: 800;
+  line-height: 0.9;
+
+  &.placeholder {
+    color: var(--ink-3);
+  }
+
+  small {
+    margin-left: 6px;
+    font-family: var(--font);
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0;
+  }
+}
+
+.steps {
+  grid-column: 7 / -1;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  padding-top: 16px;
+}
 
-  min-height: 70vh;
+.repeat {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 12px;
+  padding: 16px 0;
+  border: 0;
+  border-bottom: 1px solid var(--ink);
+  background: none;
+  text-align: left;
+  cursor: pointer;
 
-  .leave-group-btn {
-    background-color: #dc3545;
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    padding: 0.5rem 1rem;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: bold;
-    transition: background-color 0.3s ease;
+  .pi {
+    color: var(--accent-ink);
   }
 
-  .leave-group-btn:hover {
-    background-color: #c82333;
+  .repeat-desc {
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
   }
 
-  .title {
-    flex: 0.3;
-    font-size: 24px;
-    text-align: center;
-  }
-  .form {
-    width: 100%;
-    .old-order {
-      display: flex;
-      justify-content: space-between;
-    }
-    .additional-comments {
-      textarea {
-        width: 100%;
-        height: 100px;
-        resize: none;
-        border-radius: 5px;
-      }
-    }
+  &:hover .repeat-desc {
+    color: var(--accent-ink);
   }
 
-  .button-box {
-    display: flex;
-    justify-content: space-between;
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+  }
+}
+
+.step {
+  padding-bottom: 28px;
+
+  .section-head {
+    margin-bottom: 16px;
+  }
+}
+
+.for-input {
+  padding: 14px 16px;
+  font-size: 16px;
+}
+
+.submit {
+  position: sticky;
+  bottom: 0;
+  padding: 16px 0;
+  border-top: 2px solid var(--ink);
+  background: var(--paper);
+}
+
+// Skeleton tiles keep the real tile's size so nothing jumps when the menu arrives.
+.skeleton-tile {
+  cursor: default;
+
+  &:hover {
+    background: var(--paper);
+  }
+}
+
+.skeleton-chip {
+  height: 40px;
+}
+
+@media (max-width: 900px) {
+  .preview,
+  .steps {
+    grid-column: 1 / -1;
+  }
+
+  // Phones: a compact strip that stays under the header while you pick.
+  .preview {
+    top: var(--header-h);
+    z-index: 5;
+    display: grid;
+    grid-template-columns: 96px 1fr;
     align-items: center;
-
-    .submit-btn {
-      font-size: 16px;
-      color: #ffffff;
-      background-color: #34a853;
-      border: none;
-      border-radius: 8px;
-      padding: 10px 20px;
-      font-weight: bold;
-      cursor: pointer;
-      text-align: center;
-      box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
-      transition: all 0.3s ease-in-out;
-
-      &:hover {
-        background-color: #2c8c47;
-        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.3);
-        transform: translateY(-2px);
-      }
-
-      &:active {
-        transform: scale(0.95);
-        box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.2);
-      }
-    }
+    gap: 16px;
+    margin: 0 calc(-1 * var(--gutter));
+    padding: 10px var(--gutter);
+    border-bottom: 1px solid var(--ink);
+    background: var(--paper);
   }
 
-  @media (max-width: 768px) {
-    .button-box {
-      flex-direction: column;
-      gap: 15px;
-      .submit-btn,
-      .leave-group-btn {
-        width: 100%;
-      }
-    }
+  .preview-art {
+    --graphic-pad: 4%;
   }
 
-  @media (max-width: 568px) {
-    .old-order {
-      flex-direction: column;
-      gap: 15px;
-      .see-order-button {
-        width: 100%;
-      }
-    }
+  .preview-total {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    margin: 0;
+  }
+
+  .preview-price {
+    font-size: 44px;
   }
 }
